@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Check, ChevronLeft, Lock, PartyPopper } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { monthLabel, monthName } from "@/lib/data";
+import { instructorById, monthLabel, monthName } from "@/lib/data";
+import type { InstructorId } from "@/lib/types";
 import { formatILS, formatPct } from "@/lib/format";
 import { inMonth, totalsFor } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
@@ -17,6 +18,7 @@ import { MonthSelector } from "../ui/MonthSelector";
 import { PageHeader } from "../ui/PageHeader";
 import { Sheet } from "../ui/Sheet";
 import { Skeleton } from "../ui/Skeleton";
+import { MissingBadge } from "../ui/StatusPill";
 import { ProgressRing } from "./ProgressRing";
 
 interface Step {
@@ -31,14 +33,37 @@ const fmtPct = (n: number) => formatPct(n);
 
 export function CloseMonthScreen() {
   const { activities, month, closedMonths, closeMonth, loading, notify } = useStore();
-  const { missingReceipts, negative } = useAttention();
+  const { missingReceipts, losses, missingRevenue, missingDetails } = useAttention();
   const [confirming, setConfirming] = useState(false);
   const closed = closedMonths.includes(month);
   const totals = useMemo(() => totalsFor(inMonth(activities, month)), [activities, month]);
 
+  const names = (list: { instructorId: string }[]) =>
+    list.map((a) => instructorById(a.instructorId as InstructorId).name).join(", ");
+
   const steps: Step[] = [
-    { key: "entered", ok: true, label: "כל הפעילויות הוזנו", hint: `${inMonth(activities, month).length} פעילויות ביומן` },
-    { key: "revenue", ok: true, label: "סכומי ההכנסות נבדקו" },
+    {
+      key: "details",
+      ok: missingDetails.length === 0,
+      label:
+        missingDetails.length === 0
+          ? "כל הפעילויות הוזנו במלואן"
+          : `${missingDetails.length === 1 ? "בפעילות אחת" : `ב־${missingDetails.length} פעילויות`} חסרים פרטים`,
+      hint: missingDetails.length ? `${missingDetails.map((a) => a.missing).join(", ")} · ${names(missingDetails)}` : undefined,
+      href: "/activity?status=missing-info",
+    },
+    {
+      key: "revenue",
+      ok: missingRevenue.length === 0,
+      label:
+        missingRevenue.length === 0
+          ? "סכומי ההכנסות הוזנו ונבדקו"
+          : `${missingRevenue.length === 1 ? "בפעילות אחת" : `ב־${missingRevenue.length} פעילויות`} חסרה הכנסה`,
+      hint: missingRevenue.length
+        ? `${names(missingRevenue)} · לא נכלל ברווח — הרווחיות עדיין לא סופית`
+        : undefined,
+      href: "/activity?status=missing-info",
+    },
     {
       key: "receipts",
       ok: missingReceipts.length === 0,
@@ -49,15 +74,17 @@ export function CloseMonthScreen() {
     { key: "payouts", ok: true, label: "תשלומי המדריכים חושבו" },
     {
       key: "margin",
-      ok: negative.length === 0,
+      ok: losses.length === 0,
       label:
-        negative.length === 0
-          ? "אין חריגות רווחיות"
-          : negative.length === 1
+        losses.length === 0
+          ? "אין חריגות רווחיות בנתונים המלאים"
+          : losses.length === 1
             ? "קיימת חריגת רווחיות אצל מדריך אחד"
-            : `קיימות חריגות רווחיות אצל ${negative.length} מדריכים`,
-      hint: negative.length ? negative.map((n) => `${n.instructor.name} ${formatILS(n.profit)}`).join(", ") : undefined,
-      href: negative.length === 1 ? `/instructors?i=${negative[0].instructor.id}` : "/instructors",
+            : `קיימות חריגות רווחיות אצל ${losses.length} מדריכים`,
+      hint: losses.length
+        ? `הפסד בפועל · ${losses.map((n) => `${n.instructor.name} ${formatILS(n.profit ?? 0)}`).join(", ")}`
+        : undefined,
+      href: losses.length === 1 ? `/instructors?i=${losses[0].instructor.id}` : "/instructors",
     },
   ];
   const doneCount = steps.filter((s) => s.ok).length;
@@ -80,7 +107,7 @@ export function CloseMonthScreen() {
       />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
-        <div className="lg:col-span-7 flex flex-col gap-4">
+        <div className="min-w-0 lg:col-span-7 flex flex-col gap-4">
           <Card className="p-4 md:p-5">
             <div className="flex items-center gap-4">
               <ProgressRing value={progress} done={closed} />
@@ -116,7 +143,7 @@ export function CloseMonthScreen() {
                     </motion.span>
                     <div className="flex-1 min-w-0">
                       <div className={cn("text-[14.5px]", ok ? "text-fg-2" : "text-fg font-semibold")}>{s.label}</div>
-                      {s.hint && !ok && <div className="text-[12.5px] text-fg-3 mt-0.5 truncate">{s.hint}</div>}
+                      {s.hint && !ok && <div className="text-[12.5px] text-fg-3 mt-0.5 leading-snug">{s.hint}</div>}
                     </div>
                     {!ok && s.href && (
                       <span className="text-[12.5px] text-fg-3 group-hover:text-fg inline-flex items-center gap-0.5 transition-colors">
@@ -141,7 +168,7 @@ export function CloseMonthScreen() {
           </Card>
         </div>
 
-        <div className="lg:col-span-5 flex flex-col gap-4">
+        <div className="min-w-0 lg:col-span-5 flex flex-col gap-4">
           <Card className="p-4 md:p-5">
             <h2 className="text-[15px] font-semibold mb-4">סיכום פיננסי</h2>
             {loading ? (
@@ -151,13 +178,33 @@ export function CloseMonthScreen() {
                 ))}
               </div>
             ) : (
-              <dl className="flex flex-col gap-3.5 text-[14px]">
-                <SummaryLine label="הכנסות" value={totals.revenue} format={formatILS} />
-                <SummaryLine label="תשלומי מדריכים" value={-totals.payout} format={formatILS} muted />
-                <div className="h-px bg-white/[0.08]" />
-                <SummaryLine label="רווח" value={totals.profit} format={formatILS} strong />
-                <SummaryLine label="רווחיות" value={totals.margin} format={fmtPct} />
-              </dl>
+              <>
+                <dl className="flex flex-col gap-3.5 text-[14px]">
+                  <SummaryLine label="הכנסות" value={totals.revenue} format={formatILS} />
+                  <SummaryLine
+                    label={totals.pendingCount ? "תשלומים בפעילויות עם הכנסה" : "תשלומי מדריכים"}
+                    value={-totals.confirmedPayout}
+                    format={formatILS}
+                    muted
+                  />
+                  <div className="h-px bg-white/[0.08]" />
+                  <SummaryLine
+                    label={totals.pendingCount ? "רווח (לא סופי)" : "רווח"}
+                    value={totals.profit}
+                    format={formatILS}
+                    strong
+                  />
+                  <SummaryLine label="רווחיות" value={totals.margin} format={fmtPct} />
+                </dl>
+                {totals.pendingCount > 0 && (
+                  <div className="mt-4 rounded-xl px-3 py-2.5 border border-dashed border-warn/35 bg-warn/[0.05] text-[12.5px] leading-relaxed text-fg-2">
+                    <span className="text-warn font-medium">מידע חסר:</span>{" "}
+                    {totals.pendingCount === 1 ? "פעילות אחת" : `${totals.pendingCount} פעילויות`} ללא הכנסה, תשלום{" "}
+                    <span className="num">{formatILS(totals.pendingPayout)}</span>. לא נכלל בחישוב הרווח. סה״כ תשלומים לחודש:{" "}
+                    <span className="num text-fg">{formatILS(totals.payout)}</span>.
+                  </div>
+                )}
+              </>
             )}
           </Card>
 
@@ -215,8 +262,11 @@ export function CloseMonthScreen() {
       >
         <div className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-2">
-            <MiniStat label="רווח" value={formatILS(totals.profit)} />
-            <MiniStat label="רווחיות" value={formatPct(totals.margin)} />
+            <MiniStat
+              label={totals.pendingCount ? "רווח (לא סופי)" : "רווח"}
+              value={totals.profit === null ? "מידע חסר" : formatILS(totals.profit)}
+            />
+            <MiniStat label="רווחיות" value={totals.margin === null ? "מידע חסר" : formatPct(totals.margin)} />
           </div>
           {openCount > 0 && (
             <div className="rounded-2xl p-3.5 bg-warn/[0.07] ring-1 ring-inset ring-warn/20 text-[13px]">
@@ -244,7 +294,7 @@ function SummaryLine({
   muted,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   format: (n: number) => string;
   strong?: boolean;
   muted?: boolean;
@@ -253,6 +303,9 @@ function SummaryLine({
     <div className="flex items-baseline justify-between gap-3">
       <dt className={cn(strong ? "text-fg font-semibold" : "text-fg-3")}>{label}</dt>
       <dd>
+        {value === null ? (
+          <MissingBadge />
+        ) : (
         <AnimatedNumber
           value={value}
           format={format}
@@ -261,6 +314,7 @@ function SummaryLine({
             muted ? "text-fg-2" : !strong && "text-fg",
           )}
         />
+        )}
       </dd>
     </div>
   );

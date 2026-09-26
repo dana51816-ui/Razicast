@@ -13,6 +13,7 @@ import {
 } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import { BrandMark } from "../shell/Brand";
+import { DemoBadge } from "../ui/DemoBadge";
 import { Delta } from "../ui/Delta";
 import { MonthSelector } from "../ui/MonthSelector";
 import { PageHeader } from "../ui/PageHeader";
@@ -37,7 +38,14 @@ export function Dashboard() {
     };
   }, [activities, receipts, month]);
 
-  const marginDiff = prev ? totals.margin - prev.margin : null;
+  const marginDiff =
+    totals.margin !== null && prev?.margin != null ? totals.margin - prev.margin : null;
+  const pendingNote =
+    totals.pendingCount > 0 ? (
+      <span className="text-[11.5px] text-warn leading-snug">
+        לא כולל <span className="num">{formatILS(totals.pendingPayout)}</span> ללא הכנסה
+      </span>
+    ) : null;
 
   return (
     <>
@@ -59,6 +67,7 @@ export function Dashboard() {
             תמונת מצב עסקית בזמן אמת
             <span className="text-fg-4">·</span>
             <span className="text-fg-2">{monthLabel(month)}</span>
+            <DemoBadge />
           </span>
         }
         actions={<MonthSelector />}
@@ -88,7 +97,12 @@ export function Dashboard() {
           format={formatILS}
           loading={loading}
           emphasis
-          footer={<Delta value={pctChange(totals.profit, prev?.profit)} />}
+          footer={
+            <>
+              <Delta value={pctChange(totals.profit, prev?.profit)} />
+              {pendingNote}
+            </>
+          }
         />
         <KpiCard
           index={3}
@@ -97,11 +111,14 @@ export function Dashboard() {
           format={fmtPct}
           loading={loading}
           footer={
-            <Delta
-              value={marginDiff}
-              unit={marginDiff !== null ? `${marginDiff >= 0 ? "+" : "-"}${Math.abs(marginDiff).toFixed(1)}` : undefined}
-              suffix="נק׳ אחוז"
-            />
+            <>
+              <Delta
+                value={marginDiff}
+                unit={marginDiff !== null ? `${marginDiff >= 0 ? "+" : "-"}${Math.abs(marginDiff).toFixed(1)}` : undefined}
+                suffix="נק׳ אחוז"
+              />
+              {pendingNote}
+            </>
           }
         />
       </section>
@@ -111,10 +128,10 @@ export function Dashboard() {
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-12 lg:gap-5">
-        <div className="lg:col-span-5 lg:order-2">
+        <div className="min-w-0 lg:col-span-5 lg:order-2">
           <AttentionList loading={loading} />
         </div>
-        <div className="lg:col-span-7 lg:order-1">
+        <div className="min-w-0 lg:col-span-7 lg:order-1">
           <InstructorRanking summaries={summaries} loading={loading} />
         </div>
       </div>

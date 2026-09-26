@@ -8,6 +8,7 @@ import type { Activity } from "@/lib/types";
 import { cn } from "../ui/cn";
 import { InstructorAvatar } from "../ui/InstructorAvatar";
 import { Money } from "../ui/Money";
+import { ProfitValue } from "../ui/ProfitValue";
 import { Tag } from "../ui/StatusPill";
 
 export function ActivityTable({ activities }: { activities: Activity[] }) {
@@ -68,13 +69,13 @@ export function ActivityTable({ activities }: { activities: Activity[] }) {
                   <span className="num text-fg-2">{a.quantity}</span>
                 </Td>
                 <Td className="text-left">
-                  {a.revenue === null ? <span className="text-warn">חסר</span> : <Money value={a.revenue} />}
+                  {a.revenue === null ? <span className="text-warn">לא הוזנה</span> : <Money value={a.revenue} />}
                 </Td>
                 <Td className="text-left">
                   <Money value={a.payout} className="text-fg-2" />
                 </Td>
                 <Td className="text-left">
-                  <Money value={profit} tone="auto" className="font-semibold" />
+                  <ProfitValue value={profit} className="font-semibold" />
                 </Td>
               </tr>
             );

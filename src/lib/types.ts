@@ -8,12 +8,9 @@ export type InstructorId =
   | "razi"
   | "tair";
 
-export type InstructorRole = "lead" | "support";
-
 export interface Instructor {
   id: InstructorId;
   name: string;
-  role: InstructorRole;
   specialty: string;
   phone: string;
 }
@@ -23,8 +20,7 @@ export type ActivityType =
   | "סדנה"
   | "יום פעילות"
   | "פעילות פרטית"
-  | "השתלמות"
-  | "ליווי";
+  | "השתלמות";
 
 export type ActivityStatus = "complete" | "missing-info";
 
@@ -38,6 +34,7 @@ export interface Activity {
   type: ActivityType;
   quantity: number;
   unit: string;
+  /** null = revenue not entered yet. Never treated as 0. */
   revenue: number | null;
   payout: number;
   /** Human readable reason when status is missing-info */
@@ -54,20 +51,33 @@ export interface Receipt {
   receivedAt?: string;
 }
 
-export interface InstructorSummary {
-  instructor: Instructor;
-  revenue: number;
-  payout: number;
-  profit: number;
-  /** null for support instructors without direct revenue */
-  margin: number | null;
-  activities: number;
-  receipt: ReceiptStatus;
-}
+/**
+ * profit  — confirmed data shows a profit (or break-even)
+ * loss    — confirmed data shows a real loss
+ * missing — no activity has revenue entered, so no conclusion is possible
+ */
+export type ProfitState = "profit" | "loss" | "missing";
 
+/**
+ * Money totals for a set of activities.
+ * revenue/payout are plain sums of what is known.
+ * profit/margin are computed ONLY from activities whose revenue is entered;
+ * activities with missing revenue are counted in pending* instead.
+ */
 export interface MonthTotals {
   revenue: number;
   payout: number;
-  profit: number;
-  margin: number;
+  /** payout of activities that have revenue — the basis for profit */
+  confirmedPayout: number;
+  profit: number | null;
+  margin: number | null;
+  pendingCount: number;
+  pendingPayout: number;
+  state: ProfitState;
+}
+
+export interface InstructorSummary extends MonthTotals {
+  instructor: Instructor;
+  activities: number;
+  receipt: ReceiptStatus;
 }

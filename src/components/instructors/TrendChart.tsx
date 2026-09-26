@@ -10,7 +10,8 @@ interface Row {
   label: string;
   revenue: number;
   payout: number;
-  profit: number;
+  profit: number | null;
+  pendingCount: number;
 }
 
 export function TrendChart({ data }: { data: Row[] }) {
@@ -35,7 +36,14 @@ export function TrendChart({ data }: { data: Row[] }) {
                 return (
                   <div dir="rtl" className="surface-raised rounded-lg px-3 py-2 text-[12px]">
                     <div className="font-semibold mb-1">{r.label}</div>
-                    <div className="text-fg-3">הכנסה <span className="num text-fg">{formatILS(r.revenue)}</span></div>
+                    <div className="text-fg-3">
+                      הכנסה{" "}
+                      {r.profit === null ? (
+                        <span className="text-warn">לא הוזנה</span>
+                      ) : (
+                        <span className="num text-fg">{formatILS(r.revenue)}</span>
+                      )}
+                    </div>
                     <div className="text-fg-3">תשלום <span className="num text-fg">{formatILS(r.payout)}</span></div>
                   </div>
                 );
@@ -50,9 +58,14 @@ export function TrendChart({ data }: { data: Row[] }) {
         {[...data].map((r) => (
           <div key={r.label}>
             <div className="text-[11px] text-fg-3">רווח</div>
-            <div className={`num text-[13px] font-medium ${r.profit < 0 ? "text-neg" : "text-fg"}`}>
-              {formatILS(r.profit)}
-            </div>
+            {r.profit === null ? (
+              <div className="text-[12px] font-medium text-warn">מידע חסר</div>
+            ) : (
+              <div className={`num text-[13px] font-medium ${r.profit < 0 ? "text-neg" : "text-fg"}`}>
+                {formatILS(r.profit)}
+                {r.pendingCount > 0 && <span className="text-warn">*</span>}
+              </div>
+            )}
           </div>
         ))}
       </div>

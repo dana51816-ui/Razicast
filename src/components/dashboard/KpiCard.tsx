@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import { cn } from "../ui/cn";
 import { Skeleton } from "../ui/Skeleton";
+import { MissingBadge } from "../ui/StatusPill";
 
 export function KpiCard({
   label,
@@ -15,7 +16,8 @@ export function KpiCard({
   loading,
 }: {
   label: string;
-  value: number;
+  /** null = cannot be computed from the data we have */
+  value: number | null;
   format: (n: number) => string;
   footer?: React.ReactNode;
   emphasis?: boolean;
@@ -50,12 +52,16 @@ export function KpiCard({
           </>
         ) : (
           <>
-            <AnimatedNumber
-              value={value}
-              format={format}
-              className="text-[25px] md:text-[32px] font-semibold leading-none tracking-[-0.03em] text-fg"
-            />
-            {footer && <div className="mt-2.5 min-h-4">{footer}</div>}
+            {value === null ? (
+              <MissingBadge className="h-8 text-[14px]" />
+            ) : (
+              <AnimatedNumber
+                value={value}
+                format={format}
+                className="text-[25px] md:text-[32px] font-semibold leading-none tracking-[-0.03em] text-fg"
+              />
+            )}
+            {footer && <div className="mt-2.5 min-h-4 flex flex-col gap-1">{footer}</div>}
           </>
         )}
       </div>

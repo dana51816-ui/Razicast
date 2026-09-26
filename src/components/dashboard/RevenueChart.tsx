@@ -23,7 +23,10 @@ interface Row {
   label: string;
   revenue: number;
   payout: number;
-  profit: number;
+  profit: number | null;
+  margin: number | null;
+  pendingCount: number;
+  pendingPayout: number;
 }
 
 export function RevenueChart({
@@ -114,7 +117,6 @@ interface TooltipProps {
 function ChartTooltip({ active, payload }: TooltipProps) {
   if (!active || !payload?.length) return null;
   const row = payload[0].payload;
-  const margin = row.revenue ? (row.profit / row.revenue) * 100 : 0;
   return (
     <div dir="rtl" className="surface-raised rounded-xl px-3.5 py-3 min-w-[170px] text-[12.5px]">
       <div className="text-fg font-semibold mb-2">{row.label}</div>
@@ -122,10 +124,20 @@ function ChartTooltip({ active, payload }: TooltipProps) {
       <Line color={PAY} label="תשלומים" value={row.payout} />
       <div className="mt-2 pt-2 border-t hairline flex justify-between gap-4">
         <span className="text-fg-3">רווח</span>
-        <span className="num text-fg font-medium">
-          {formatILS(row.profit)} <span className="text-fg-3">· {margin.toFixed(1)}%</span>
-        </span>
+        {row.profit === null ? (
+          <span className="text-warn">מידע חסר</span>
+        ) : (
+          <span className="num text-fg font-medium">
+            {formatILS(row.profit)}
+            {row.margin !== null && <span className="text-fg-3"> · {row.margin.toFixed(1)}%</span>}
+          </span>
+        )}
       </div>
+      {row.pendingCount > 0 && (
+        <div className="mt-1.5 text-[11.5px] text-warn max-w-[190px] leading-snug">
+          לא כולל תשלום <span className="num">{formatILS(row.pendingPayout)}</span> בפעילות ללא הכנסה
+        </div>
+      )}
     </div>
   );
 }

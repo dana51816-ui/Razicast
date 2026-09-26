@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { INSTRUCTORS, monthLabel } from "@/lib/data";
 import { formatPct } from "@/lib/format";
-import { instructorSummaries } from "@/lib/selectors";
+import { byProfit, inMonth, instructorSummaries, totalsFor } from "@/lib/selectors";
 import { useStore } from "@/lib/store";
 import type { InstructorId } from "@/lib/types";
 import { EmptyState } from "../ui/EmptyState";
@@ -24,19 +24,14 @@ export function InstructorsScreen() {
   const openId = INSTRUCTORS.some((i) => i.id === raw) ? (raw as InstructorId) : null;
 
   const summaries = useMemo(
-    () => instructorSummaries(activities, receipts, month).sort((a, b) => {
-      // support staff last, otherwise by profit
-      if ((a.margin === null) !== (b.margin === null)) return a.margin === null ? 1 : -1;
-      return b.profit - a.profit;
-    }),
+    () => instructorSummaries(activities, receipts, month).sort(byProfit),
     [activities, receipts, month],
   );
 
-  const leads = summaries.filter((s) => s.margin !== null);
-  const avgMargin = leads.length
-    ? (leads.reduce((s, x) => s + x.profit, 0) / leads.reduce((s, x) => s + x.revenue, 0)) * 100
-    : 0;
-  const negatives = leads.filter((s) => s.profit < 0).length;
+  // Month-level margin on the confirmed basis (same number as the dashboard).
+  const monthTotals = totalsFor(inMonth(activities, month));
+  const losses = summaries.filter((s) => s.state === "loss").length;
+  const missing = summaries.filter((s) => s.state === "missing").length;
 
   const open = (id: InstructorId | null) =>
     router.replace(id ? `${pathname}?i=${id}` : pathname, { scroll: false });
@@ -47,11 +42,20 @@ export function InstructorsScreen() {
         title="מדריכים"
         subtitle={
           <>
-            <span className="num">{summaries.length}</span> מדריכים פעילים ב{monthLabel(month)} · רווחיות ממוצעת{" "}
-            <span className="num text-fg-2">{formatPct(avgMargin)}</span>
-            {negatives > 0 && (
+            <span className="num">{summaries.length}</span> מדריכים פעילים ב{monthLabel(month)}
+            {monthTotals.margin !== null && (
               <>
-                {" "}· <span className="text-neg">{negatives} ברווחיות שלילית</span>
+                {" "}· רווחיות <span className="num text-fg-2">{formatPct(monthTotals.margin)}</span>
+              </>
+            )}
+            {losses > 0 && (
+              <>
+                {" "}· <span className="text-neg">{losses} בהפסד</span>
+              </>
+            )}
+            {missing > 0 && (
+              <>
+                {" "}· <span className="text-warn">{missing} עם מידע חסר</span>
               </>
             )}
           </>

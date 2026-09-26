@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BellRing, TrendingDown } from "lucide-react";
+import { AlertTriangle, BellRing, CircleHelp, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { instructorById, monthName } from "@/lib/data";
@@ -12,7 +12,8 @@ import { cn } from "../ui/cn";
 import { InstructorAvatar } from "../ui/InstructorAvatar";
 import { Money } from "../ui/Money";
 import { Sheet } from "../ui/Sheet";
-import { ReceiptPill, Tag } from "../ui/StatusPill";
+import { ProfitValue } from "../ui/ProfitValue";
+import { MissingBadge, ReceiptPill, Tag } from "../ui/StatusPill";
 import { TrendChart } from "./TrendChart";
 
 export function InstructorDrawer({ id, onClose }: { id: InstructorId | null; onClose: () => void }) {
@@ -29,7 +30,8 @@ export function InstructorDrawer({ id, onClose }: { id: InstructorId | null; onC
 
   const inst = id ? instructorById(id) : null;
   const s = data?.summary;
-  const negative = s && s.margin !== null && s.profit < 0;
+  const negative = s?.state === "loss";
+  const missing = s?.state === "missing";
 
   return (
     <Sheet
@@ -56,9 +58,25 @@ export function InstructorDrawer({ id, onClose }: { id: InstructorId | null; onC
             <div className="flex gap-3 rounded-2xl p-3.5 bg-neg/[0.07] ring-1 ring-inset ring-neg/20">
               <TrendingDown className="size-5 text-neg shrink-0 mt-0.5" />
               <div className="text-[13px] leading-relaxed">
-                <div className="font-semibold text-fg">רווחיות שלילית החודש</div>
+                <div className="font-semibold text-fg">הפסד בפועל החודש</div>
                 <div className="text-fg-2">
-                  התשלום גבוה מההכנסה ב־<Money value={Math.abs(s!.profit)} />. ייתכן שחסרה הכנסה באחת הפעילויות.
+                  לפי הנתונים שהוזנו, התשלום גבוה מההכנסה ב־<Money value={Math.abs(s?.profit ?? 0)} />.
+                </div>
+              </div>
+            </div>
+          )}
+          {s && s.pendingCount > 0 && (
+            <div className="flex gap-3 rounded-2xl p-3.5 bg-warn/[0.05] border border-dashed border-warn/35">
+              <CircleHelp className="size-5 text-warn shrink-0 mt-0.5" />
+              <div className="text-[13px] leading-relaxed">
+                <div className="font-semibold text-fg">מידע חסר</div>
+                <div className="text-fg-2">
+                  {s.pendingCount === 1 ? "בפעילות אחת" : `ב־${s.pendingCount} פעילויות`} לא הוזנה הכנסה (תשלום{" "}
+                  <Money value={s.pendingPayout} />
+                  ).{" "}
+                  {missing
+                    ? "אי אפשר לחשב רווח או רווחיות עד שההכנסה תוזן."
+                    : "הן לא נכללות ברווח וברווחיות שמוצגים כאן."}
                 </div>
               </div>
             </div>
@@ -66,13 +84,19 @@ export function InstructorDrawer({ id, onClose }: { id: InstructorId | null; onC
 
           {s ? (
             <div className="grid grid-cols-2 gap-2">
-              <Stat label="הכנסות החודש"><Money value={s.revenue} /></Stat>
-              <Stat label="תשלום"><Money value={s.payout} /></Stat>
-              <Stat label="רווח" accent={!negative} danger={!!negative}>
-                <Money value={s.profit} tone="auto" />
+              <Stat label="הכנסות החודש">
+                {missing ? <span className="text-warn text-[15px]">לא הוזנה</span> : <Money value={s.revenue} />}
               </Stat>
-              <Stat label="רווחיות" danger={!!negative}>
-                {s.margin === null ? <span className="text-fg-3 text-[15px]">מלווה</span> : <span className="num">{formatPct(s.margin)}</span>}
+              <Stat label="תשלום"><Money value={s.payout} /></Stat>
+              <Stat label="רווח" accent={s.state === "profit"} danger={negative}>
+                <ProfitValue value={s.profit} badgeClassName="mt-1" />
+              </Stat>
+              <Stat label="רווחיות" danger={negative}>
+                {s.margin === null ? (
+                  <MissingBadge className="mt-1" />
+                ) : (
+                  <span className="num">{formatPct(s.margin)}</span>
+                )}
               </Stat>
               <Stat label="מספר פעילויות"><span className="num">{s.activities}</span></Stat>
               <Stat label="סטטוס קבלה">
@@ -132,7 +156,7 @@ export function InstructorDrawer({ id, onClose }: { id: InstructorId | null; onC
                       </div>
                     </div>
                     <div className="text-end">
-                      <Money value={p} tone="auto" className="text-[14px] font-semibold" />
+                      <ProfitValue value={p} className="text-[14px] font-semibold" badgeClassName="h-5 px-1.5 text-[11px]" />
                       <div className="text-[11px] text-fg-3 mt-0.5">
                         תשלום <Money value={a.payout} />
                       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronLeft, FileWarning, ReceiptText, TrendingDown, type LucideIcon } from "lucide-react";
+import { ChevronLeft, CircleHelp, ReceiptText, TrendingDown, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { instructorById } from "@/lib/data";
 import { formatILS } from "@/lib/format";
@@ -17,7 +17,7 @@ interface Item {
   key: string;
   href: string;
   icon: LucideIcon;
-  tone: "warn" | "neg";
+  tone: "warn" | "neg" | "missing";
   title: string;
   detail: string;
 }
@@ -25,10 +25,11 @@ interface Item {
 const tones = {
   warn: "text-warn bg-warn/10 ring-warn/20",
   neg: "text-neg bg-neg/10 ring-neg/20",
+  missing: "text-warn bg-warn/[0.05] ring-transparent border border-dashed border-warn/45",
 };
 
 export function AttentionList({ loading }: { loading?: boolean }) {
-  const { missingReceipts, negative, incomplete } = useAttention();
+  const { missingReceipts, losses, missingRevenue, missingDetails, incomplete } = useAttention();
   const { activities, month } = useStore();
   const monthActs = inMonth(activities, month);
 
@@ -47,25 +48,35 @@ export function AttentionList({ loading }: { loading?: boolean }) {
         missingReceipts.reduce((s, r) => s + payoutOf(r.instructorId), 0),
       )}`,
     });
-  if (negative.length)
+  // Real losses only — computed from activities whose revenue is entered.
+  if (losses.length)
     items.push({
-      key: "negative",
-      href: negative.length === 1 ? `/instructors?i=${negative[0].instructor.id}` : "/instructors",
+      key: "loss",
+      href: losses.length === 1 ? `/instructors?i=${losses[0].instructor.id}` : "/instructors",
       icon: TrendingDown,
       tone: "neg",
-      title: negative.length === 1 ? "מדריך אחד ברווחיות שלילית" : `${negative.length} מדריכים ברווחיות שלילית`,
-      detail: negative.map((n) => `${n.instructor.name} ${formatILS(n.profit)}`).join(", "),
+      title: losses.length === 1 ? "מדריך אחד ברווחיות שלילית" : `${losses.length} מדריכים ברווחיות שלילית`,
+      detail: `הפסד בפועל · ${losses.map((n) => `${n.instructor.name} ${formatILS(n.profit ?? 0)}`).join(", ")}`,
     });
+  // Missing data — explicitly not a loss.
   if (incomplete.length)
     items.push({
       key: "incomplete",
       href: "/activity?status=missing-info",
-      icon: FileWarning,
-      tone: "warn",
+      icon: CircleHelp,
+      tone: "missing",
       title: `${incomplete.length} פעילויות שחסר בהן מידע`,
-      detail: incomplete.map((a) => a.missing).join(" · "),
+      detail: [
+        missingRevenue.length
+          ? `הכנסה חסרה: ${missingRevenue.map((a) => instructorById(a.instructorId).name).join(", ")} (לא נכלל ברווחיות)`
+          : null,
+        missingDetails.length
+          ? `פרטים חסרים: ${missingDetails.map((a) => instructorById(a.instructorId).name).join(", ")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" · "),
     });
-
   return (
     <Card className="p-4 md:p-5 h-full">
       <SectionTitle
@@ -112,7 +123,7 @@ export function AttentionList({ loading }: { loading?: boolean }) {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[14.5px] font-semibold text-fg">{item.title}</span>
-                  <span className="block text-[12.5px] text-fg-3 truncate mt-0.5">{item.detail}</span>
+                  <span className="block text-[12.5px] text-fg-3 mt-0.5 leading-snug">{item.detail}</span>
                 </span>
                 <ChevronLeft className="size-4 text-fg-4 group-hover:text-fg-2 group-hover:-translate-x-0.5 transition-all" />
               </Link>

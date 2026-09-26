@@ -20,12 +20,12 @@ export const monthLabel = (m: MonthKey) =>
 export const monthName = (m: MonthKey) => monthLabel(m).split(" ")[0];
 
 export const INSTRUCTORS: Instructor[] = [
-  { id: "okampo", name: "אוקמפו", role: "lead", specialty: "חוגים וסדנאות", phone: "050-712-3304" },
-  { id: "victoria", name: "ויקטוריה", role: "lead", specialty: "מסגרות חינוך", phone: "052-448-9120" },
-  { id: "regina", name: "רג׳ינה", role: "lead", specialty: "צהרונים", phone: "054-301-7765" },
-  { id: "tzah", name: "צח", role: "lead", specialty: "בתי ספר", phone: "050-993-1142" },
-  { id: "razi", name: "רזי", role: "lead", specialty: "השתלמויות ואירועים", phone: "052-600-0019" },
-  { id: "tair", name: "תאיר", role: "support", specialty: "מדריכה מלווה", phone: "053-270-4481" },
+  { id: "okampo", name: "אוקמפו", specialty: "חוגים וסדנאות", phone: "050-712-3304" },
+  { id: "victoria", name: "ויקטוריה", specialty: "מסגרות חינוך", phone: "052-448-9120" },
+  { id: "regina", name: "רג׳ינה", specialty: "צהרונים", phone: "054-301-7765" },
+  { id: "tzah", name: "צח", specialty: "בתי ספר", phone: "050-993-1142" },
+  { id: "razi", name: "רזי", specialty: "השתלמויות ואירועים", phone: "052-600-0019" },
+  { id: "tair", name: "תאיר", specialty: "סדנאות", phone: "053-270-4481" },
 ];
 
 export const instructorById = (id: InstructorId) =>
@@ -37,7 +37,6 @@ export const ACTIVITY_TYPES: ActivityType[] = [
   "יום פעילות",
   "פעילות פרטית",
   "השתלמות",
-  "ליווי",
 ];
 
 export const CLIENTS = [
@@ -79,6 +78,13 @@ function act(
   };
 }
 
+/**
+ * MOCK DATA.
+ * September figures follow the brief: five instructors' revenue/payout as given
+ * (total revenue ₪24,135). The brief's total payout (₪12,888) is ₪380 higher than
+ * those five instructors' payouts; that ₪380 is assigned to תאיר, whose revenue the
+ * brief does not state — so it is stored as missing (null), not as zero.
+ */
 export const ACTIVITIES: Activity[] = [
   // ספטמבר 2026
   act("2026-09", 2, "okampo", "ילדי הפלא", "חוג", 4, "מפגשים", 1840, 960),
@@ -92,15 +98,15 @@ export const ACTIVITIES: Activity[] = [
   act("2026-09", 22, "victoria", "גפן", "חוג", 2, "מפגשים", 1000, 700),
   act("2026-09", 4, "regina", "צהרון ניצנים", "חוג", 3, "מפגשים", 1203, 806),
   act("2026-09", 18, "regina", null, "סדנה", 1, "סדנה", 800, 540, "חסר שם לקוח"),
-  act("2026-09", 10, "tzah", "בית ספר הדר", "סדנה", 2, "סדנאות", 900, 1120),
-  act("2026-09", 17, "tzah", "ילדי הפלא", "חוג", 4, "מפגשים", null, 1120, "חסר סכום הכנסה"),
+  act("2026-09", 10, "tzah", "בית ספר הדר", "סדנה", 2, "סדנאות", 520, 1120),
+  act("2026-09", 17, "tzah", "ילדי הפלא", "חוג", 4, "מפגשים", 380, 1120),
   act("2026-09", 3, "razi", "גפן", "השתלמות", 1, "השתלמות צוות", 3200, 400),
   act("2026-09", 11, "razi", "בית ספר אלון", "יום פעילות", 4, "כיתות", 2612, 498),
   act("2026-09", 21, "razi", "פעילות פרטית · אירוע חברה", "פעילות פרטית", 1, "אירוע", 2400, 500),
-  act("2026-09", 13, "tair", "בית ספר הדר", "ליווי", 2, "כיתות", 0, 380),
+  act("2026-09", 13, "tair", "בית ספר הדר", "סדנה", 1, "סדנה", null, 380, "חסר סכום הכנסה"),
 
   // אוגוסט 2026
-  act("2026-08", 5, "okampo", "ילדי הפלא", "חוג", 6, "מפגשים", 3400, 1760),
+  act("2026-08", 5, "okampo", "ילדי הפלא", "חוג", 6, "מפגשים", 2780, 1760),
   act("2026-08", 19, "okampo", "גפן", "סדנה", 2, "סדנאות", 2720, 1420),
   act("2026-08", 6, "victoria", "גפן", "חוג", 5, "מפגשים", 2980, 1960),
   act("2026-08", 21, "victoria", "מתנ״ס נווה עוז", "יום פעילות", 2, "קבוצות", 2500, 1640),
@@ -109,7 +115,7 @@ export const ACTIVITIES: Activity[] = [
   act("2026-08", 14, "tzah", "בית ספר הדר", "סדנה", 3, "סדנאות", 1900, 1650),
   act("2026-08", 4, "razi", "גפן", "השתלמות", 1, "השתלמות צוות", 3000, 550),
   act("2026-08", 27, "razi", "פעילות פרטית · אירוע חברה", "פעילות פרטית", 1, "אירוע", 2400, 500),
-  act("2026-08", 19, "tair", "גפן", "ליווי", 2, "סדנאות", 0, 300),
+  act("2026-08", 19, "tair", "גפן", "סדנה", 1, "סדנה", 620, 300),
 
   // יולי 2026
   act("2026-07", 3, "okampo", "ילדי הפלא", "חוג", 5, "מפגשים", 2800, 1500),

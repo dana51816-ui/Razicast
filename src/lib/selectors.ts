@@ -9,13 +9,35 @@ import type {
   ReceiptStatus,
 } from "./types";
 
-export const activityProfit = (a: Activity) => (a.revenue ?? 0) - a.payout;
+export const hasRevenue = (a: Activity) => a.revenue !== null;
+export const isIncomplete = (a: Activity) => !!a.missing || a.revenue === null || a.client === null;
+
+/** null when revenue is missing — an unknown profit, never a loss. */
+export const activityProfit = (a: Activity): number | null =>
+  a.revenue === null ? null : a.revenue - a.payout;
 
 export function totalsFor(activities: Activity[]): MonthTotals {
-  const revenue = activities.reduce((s, a) => s + (a.revenue ?? 0), 0);
+  const confirmed = activities.filter(hasRevenue);
+  const pending = activities.filter((a) => !hasRevenue(a));
+  const revenue = confirmed.reduce((s, a) => s + (a.revenue as number), 0);
   const payout = activities.reduce((s, a) => s + a.payout, 0);
-  const profit = revenue - payout;
-  return { revenue, payout, profit, margin: revenue ? (profit / revenue) * 100 : 0 };
+  const confirmedPayout = confirmed.reduce((s, a) => s + a.payout, 0);
+  const pendingPayout = pending.reduce((s, a) => s + a.payout, 0);
+
+  const hasBasis = confirmed.length > 0;
+  const profit = hasBasis ? revenue - confirmedPayout : null;
+  const margin = hasBasis && revenue > 0 ? ((profit as number) / revenue) * 100 : null;
+
+  return {
+    revenue,
+    payout,
+    confirmedPayout,
+    profit,
+    margin,
+    pendingCount: pending.length,
+    pendingPayout,
+    state: profit === null ? "missing" : profit < 0 ? "loss" : "profit",
+  };
 }
 
 export const inMonth = (activities: Activity[], month: MonthKey) =>
@@ -26,8 +48,8 @@ export function previousMonth(month: MonthKey): MonthKey | null {
   return MONTHS[idx + 1]?.key ?? null;
 }
 
-export function pctChange(current: number, prev: number | undefined): number | null {
-  if (prev === undefined || prev === 0) return null;
+export function pctChange(current: number | null, prev: number | null | undefined): number | null {
+  if (current === null || prev === undefined || prev === null || prev === 0) return null;
   return ((current - prev) / Math.abs(prev)) * 100;
 }
 
@@ -39,6 +61,13 @@ export function receiptStatus(
   return receipts.find((r) => r.month === month && r.instructorId === id)?.status ?? null;
 }
 
+const STATE_ORDER = { profit: 0, loss: 1, missing: 2 } as const;
+
+/** Profit first (desc), then real losses, then instructors with no conclusion possible. */
+export function byProfit(a: InstructorSummary, b: InstructorSummary) {
+  return STATE_ORDER[a.state] - STATE_ORDER[b.state] || (b.profit ?? 0) - (a.profit ?? 0);
+}
+
 export function instructorSummaries(
   activities: Activity[],
   receipts: Receipt[],
@@ -47,13 +76,9 @@ export function instructorSummaries(
   const monthActs = inMonth(activities, month);
   return INSTRUCTORS.map((instructor) => {
     const acts = monthActs.filter((a) => a.instructorId === instructor.id);
-    const t = totalsFor(acts);
     return {
+      ...totalsFor(acts),
       instructor,
-      revenue: t.revenue,
-      payout: t.payout,
-      profit: t.profit,
-      margin: instructor.role === "support" || !t.revenue ? null : t.margin,
       activities: acts.length,
       receipt: receiptStatus(receipts, month, instructor.id) ?? "received",
     };
@@ -62,16 +87,25 @@ export function instructorSummaries(
 
 /** Per-month revenue/payout series for the trend chart (history + logged months). */
 export function monthlySeries(activities: Activity[]) {
-  const logged = [...MONTHS]
-    .reverse()
-    .map((m) => {
-      const t = totalsFor(inMonth(activities, m.key));
-      return { month: m.key as string, label: m.short, revenue: t.revenue, payout: t.payout };
-    });
-  return [...HISTORY, ...logged].map((row) => ({
-    ...row,
-    profit: row.revenue - row.payout,
-  }));
+  const logged = [...MONTHS].reverse().map((m) => {
+    const t = totalsFor(inMonth(activities, m.key));
+    return {
+      month: m.key as string,
+      label: m.short,
+      revenue: t.revenue,
+      payout: t.payout,
+      profit: t.profit,
+      margin: t.margin,
+      pendingCount: t.pendingCount,
+      pendingPayout: t.pendingPayout,
+    };
+  });
+  const history = HISTORY.map((h) => {
+    const profit: number | null = h.revenue - h.payout;
+    const margin: number | null = (profit / h.revenue) * 100;
+    return { ...h, profit, margin, pendingCount: 0, pendingPayout: 0 };
+  });
+  return [...history, ...logged];
 }
 
 export function instructorTrend(activities: Activity[], id: InstructorId) {

@@ -110,7 +110,12 @@ export function ActivityScreen() {
             הכנסה <Money value={totals.revenue} className="text-fg-2" />
           </span>
           <span>
-            רווח <Money value={totals.profit} tone="auto" className="text-fg font-medium" />
+            רווח{" "}
+            {totals.profit === null ? (
+              <span className="text-warn">מידע חסר</span>
+            ) : (
+              <Money value={totals.profit} tone="auto" className="text-fg font-medium" />
+            )}
           </span>
         </span>
       </div>

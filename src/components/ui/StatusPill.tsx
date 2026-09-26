@@ -1,4 +1,4 @@
-import { AlertCircle, Check, Clock3 } from "lucide-react";
+import { AlertCircle, Check, CircleHelp, Clock3 } from "lucide-react";
 import type { ReceiptStatus } from "@/lib/types";
 import { cn } from "./cn";
 
@@ -57,6 +57,27 @@ export function Tag({
       )}
     >
       {children}
+    </span>
+  );
+}
+
+/** The one visual for "we don't know yet" — amber, dashed, never red. */
+export function MissingBadge({
+  label = "מידע חסר",
+  className,
+}: {
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 h-6 px-2 rounded-md text-[12px] font-medium whitespace-nowrap text-warn bg-warn/[0.07] border border-dashed border-warn/40",
+        className,
+      )}
+    >
+      <CircleHelp className="size-3.5" strokeWidth={2.25} />
+      {label}
     </span>
   );
 }

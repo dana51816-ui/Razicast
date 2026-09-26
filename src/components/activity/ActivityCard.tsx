@@ -9,6 +9,7 @@ import type { Activity } from "@/lib/types";
 import { cn } from "../ui/cn";
 import { InstructorAvatar } from "../ui/InstructorAvatar";
 import { Money } from "../ui/Money";
+import { ProfitValue } from "../ui/ProfitValue";
 import { Tag } from "../ui/StatusPill";
 
 export function ActivityCard({ activity: a, index = 0 }: { activity: Activity; index?: number }) {
@@ -58,13 +59,17 @@ export function ActivityCard({ activity: a, index = 0 }: { activity: Activity; i
       </div>
       <dl className="grid grid-cols-3 border-t hairline">
         <Metric label="הכנסה לחברה">
-          {a.revenue === null ? <span className="text-warn text-[13px]">חסר</span> : <Money value={a.revenue} />}
+          {a.revenue === null ? <span className="text-warn text-[13px] font-medium">לא הוזנה</span> : <Money value={a.revenue} />}
         </Metric>
         <Metric label="תשלום למדריך" className="border-x hairline">
           <Money value={a.payout} className="text-fg-2" />
         </Metric>
         <Metric label="רווח">
-          <Money value={profit} tone="auto" className={cn("font-semibold", profit > 0 && "text-fg")} />
+          <ProfitValue
+            value={profit}
+            className={cn("font-semibold", profit !== null && profit > 0 && "text-fg")}
+            badgeClassName="h-5 px-1.5 text-[11px]"
+          />
         </Metric>
       </dl>
     </motion.article>

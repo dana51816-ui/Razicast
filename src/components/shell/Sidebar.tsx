@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { monthLabel } from "@/lib/data";
 import { useStore } from "@/lib/store";
 import { cn } from "../ui/cn";
+import { DemoBadge } from "../ui/DemoBadge";
 import { BrandMark, Wordmark } from "./Brand";
 import { isActive, NAV } from "./nav";
 import { useAttention } from "./useAttention";
@@ -81,6 +82,7 @@ export function Sidebar() {
             </span>
           </div>
           <div className="text-[14px] font-semibold mt-1">{monthLabel(month)}</div>
+          <DemoBadge className="mt-2" />
         </div>
         <div className="flex items-center gap-3 px-2 pt-4 pb-1">
           <div className="size-8 rounded-full bg-gradient-to-br from-ink-500 to-ink-700 ring-1 ring-white/10 grid place-items-center text-[13px] font-semibold">
