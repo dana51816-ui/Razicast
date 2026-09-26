@@ -1,28 +1,19 @@
-import { formatILS } from "@/lib/format";
+import { formatILS, signedILS } from "@/lib/format";
 import { cn } from "./cn";
 
-type Tone = "default" | "auto" | "muted";
-
+/** A shekel amount. `signed` adds +/−; `loss` colors negatives red. */
 export function Money({
   value,
-  tone = "default",
+  signed = false,
   className,
 }: {
   value: number;
-  /** auto: red for negative values */
-  tone?: Tone;
+  signed?: boolean;
   className?: string;
 }) {
   return (
-    <span
-      className={cn(
-        "num",
-        tone === "auto" && value < 0 && "text-neg",
-        tone === "muted" && "text-fg-2",
-        className,
-      )}
-    >
-      {formatILS(value)}
+    <span className={cn("num", signed && value < 0 && "text-loss-ink", className)}>
+      {signed ? signedILS(value) : formatILS(value)}
     </span>
   );
 }

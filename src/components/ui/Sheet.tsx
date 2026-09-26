@@ -1,90 +1,70 @@
 "use client";
 
 import { AnimatePresence, motion, type PanInfo } from "framer-motion";
-import { X } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { useIsDesktop } from "@/lib/useMediaQuery";
 import { cn } from "./cn";
 
 /**
- * One overlay primitive, three presentations:
- *  - phone: bottom sheet with drag-to-dismiss (feels native on iPhone)
- *  - desktop "drawer": panel sliding in from the inline-end edge (left in RTL)
- *  - desktop "dialog": centered modal
+ * One overlay, two sizes.
+ *  - "sheet":  a bottom sheet on the phone (drag down to close), a centered panel on desktop
+ *  - "screen": a full-height flow on the phone, a tall centered panel on desktop
  */
 export function Sheet({
   open,
   onClose,
-  title,
-  subtitle,
+  label,
+  size = "sheet",
   children,
-  footer,
-  variant = "dialog",
   className,
 }: {
   open: boolean;
   onClose: () => void;
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
+  /** Accessible name */
+  label: string;
+  size?: "sheet" | "screen";
   children: React.ReactNode;
-  footer?: React.ReactNode;
-  variant?: "dialog" | "drawer";
   className?: string;
 }) {
   const desktop = useIsDesktop();
   const [mounted, setMounted] = useState(false);
-  const titleId = useId();
-
+  const id = useId();
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    // Lock both <html> and <body>: locking only body still lets the page scroll behind the sheet on iOS
+    const root = document.documentElement;
+    const prev = [root.style.overflow, document.body.style.overflow];
+    root.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      root.style.overflow = prev[0];
+      document.body.style.overflow = prev[1];
     };
   }, [open, onClose]);
 
   if (!mounted) return null;
 
-  const mode = !desktop ? "sheet" : variant;
-
-  const panelMotion = {
-    sheet: {
-      initial: { y: "100%" },
-      animate: { y: 0 },
-      exit: { y: "100%" },
-      transition: { type: "spring" as const, stiffness: 420, damping: 42 },
-    },
-    drawer: {
-      initial: { x: "-100%" },
-      animate: { x: 0 },
-      exit: { x: "-100%" },
-      transition: { type: "spring" as const, stiffness: 380, damping: 40 },
-    },
-    dialog: {
-      initial: { opacity: 0, scale: 0.97, y: 8 },
-      animate: { opacity: 1, scale: 1, y: 0 },
-      exit: { opacity: 0, scale: 0.98, y: 4 },
-      transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] as const },
-    },
-  }[mode];
-
   const onDragEnd = (_: unknown, info: PanInfo) => {
-    if (info.offset.y > 120 || info.velocity.y > 600) onClose();
+    if (info.offset.y > 120 || info.velocity.y > 700) onClose();
   };
+  const mobileSheet = !desktop && size === "sheet";
+  const mobileScreen = !desktop && size === "screen";
 
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-[80]" role="presentation">
-          <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-[3px]"
+        <div className="fixed inset-0 z-[80]" role="presentation" key={id}>
+          <motion.button
+            type="button"
+            aria-label="סגירה"
+            tabIndex={-1}
+            className="absolute inset-0 bg-ink/50 cursor-default"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -94,58 +74,38 @@ export function Sheet({
           <div
             className={cn(
               "absolute pointer-events-none flex",
-              mode === "sheet" && "inset-x-0 bottom-0 items-end",
-              mode === "drawer" && "inset-y-0 left-0 items-stretch",
-              mode === "dialog" && "inset-0 items-center justify-center p-6",
+              desktop ? "inset-0 items-center justify-center p-6" : "inset-x-0 bottom-0 top-0 items-end",
             )}
           >
             <motion.div
               role="dialog"
               aria-modal="true"
-              aria-labelledby={titleId}
-              {...panelMotion}
-              drag={mode === "sheet" ? "y" : false}
+              aria-label={label}
+              initial={desktop ? { opacity: 0, y: 16, scale: 0.98 } : { y: "100%" }}
+              animate={desktop ? { opacity: 1, y: 0, scale: 1 } : { y: 0 }}
+              exit={desktop ? { opacity: 0, y: 10, scale: 0.98 } : { y: "100%" }}
+              transition={desktop ? { duration: 0.22, ease: [0.2, 0.8, 0.2, 1] } : { type: "spring", stiffness: 420, damping: 42 }}
+              drag={mobileSheet ? "y" : false}
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={{ top: 0, bottom: 0.6 }}
               onDragEnd={onDragEnd}
               className={cn(
-                "pointer-events-auto surface-raised flex flex-col text-fg",
-                mode === "sheet" &&
-                  "w-full max-h-[92dvh] rounded-t-[26px] pb-[max(env(safe-area-inset-bottom),12px)]",
-                mode === "drawer" && "w-[480px] max-w-[92vw] h-full rounded-e-[22px] border-s-0",
-                mode === "dialog" && "w-full max-w-[480px] max-h-[86vh] rounded-[22px]",
+                "pointer-events-auto flex flex-col text-ink shadow-[0_-20px_60px_-20px_rgba(13,14,16,.35)]",
+                mobileSheet && "w-full max-h-[92dvh] bg-paper rounded-t-[32px] pb-[max(env(safe-area-inset-bottom),16px)]",
+                mobileScreen && "w-full h-[100dvh] bg-stone pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),12px)]",
+                desktop && size === "sheet" && "w-full max-w-[480px] max-h-[86vh] bg-paper rounded-[28px]",
+                desktop && size === "screen" && "w-full max-w-[460px] h-[min(860px,92vh)] bg-stone rounded-[28px]",
                 className,
               )}
             >
-              {mode === "sheet" && (
-                <div className="pt-2.5 pb-1 grid place-items-center cursor-grab active:cursor-grabbing">
-                  <div className="h-1 w-10 rounded-full bg-white/15" />
+              {mobileSheet && (
+                <div className="pt-3 pb-1 grid place-items-center cursor-grab" aria-hidden>
+                  <div className="h-[5px] w-10 rounded-full bg-stone-3" />
                 </div>
               )}
-              <div className="flex items-start justify-between gap-4 px-5 pt-3 pb-4 md:px-6 md:pt-6">
-                <div className="min-w-0">
-                  <h2 id={titleId} className="text-[18px] font-semibold tracking-tight">
-                    {title}
-                  </h2>
-                  {subtitle && <div className="text-[13px] text-fg-3 mt-1">{subtitle}</div>}
-                </div>
-                <button
-                  onClick={onClose}
-                  aria-label="סגירה"
-                  className="shrink-0 size-9 -me-1.5 -mt-1 rounded-full grid place-items-center text-fg-3 hover:text-fg hover:bg-white/[0.06] transition-colors"
-                >
-                  <X className="size-[18px]" />
-                </button>
-              </div>
-              <div
-                className="flex-1 overflow-y-auto overscroll-contain px-5 md:px-6 pb-5"
-                onPointerDownCapture={(e) => e.stopPropagation()}
-              >
+              <div className="flex-1 min-h-0 flex flex-col" onPointerDownCapture={(e) => mobileSheet && e.stopPropagation()}>
                 {children}
               </div>
-              {footer && (
-                <div className="px-5 md:px-6 pt-3 pb-3 md:pb-6 border-t hairline">{footer}</div>
-              )}
             </motion.div>
           </div>
         </div>

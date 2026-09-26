@@ -35,13 +35,13 @@ const css = await postcss([tailwind({ base: root, optimize: { minify: true } })]
 
 const script = js.outputFiles[0].text.replace(/<\/script/gi, "<\\/script");
 const html = `<title>Razicast Control</title>
-<meta name="theme-color" content="#0b0c0f">
+<meta name="theme-color" content="#efefec">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Heebo:wght@300..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Karantina:wght@400;700&display=swap">
 <style>
-:root{color-scheme:dark;--font-geist:"Geist";--font-heebo:"Heebo"}
-html,body{background:#0b0c0f;color:#eef0f3}
+:root{color-scheme:light;--font-plex:"IBM Plex Sans Hebrew";--font-karantina:"Karantina"}
+html,body{background:#efefec;color:#0d0e10}
 </style>
 <style>${css.css}</style>
 <div id="root" dir="rtl" lang="he"></div>

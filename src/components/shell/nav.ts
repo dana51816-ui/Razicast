@@ -1,18 +1,11 @@
-import { CalendarCheck2, LayoutGrid, ReceiptText, Users, Zap, type LucideIcon } from "lucide-react";
+export const NAV = [
+  { href: "/", label: "ראשי" },
+  { href: "/team", label: "צוות" },
+  { href: "/month", label: "חודש" },
+] as const;
 
-export interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
+export function activeHref(pathname: string) {
+  if (pathname.startsWith("/team") || pathname.startsWith("/instructor")) return "/team";
+  if (pathname.startsWith("/month")) return "/month";
+  return "/";
 }
-
-export const NAV: NavItem[] = [
-  { href: "/", label: "ראשי", icon: LayoutGrid },
-  { href: "/activity", label: "פעילות", icon: Zap },
-  { href: "/instructors", label: "מדריכים", icon: Users },
-  { href: "/receipts", label: "קבלות", icon: ReceiptText },
-  { href: "/close", label: "סגירת חודש", icon: CalendarCheck2 },
-];
-
-export const isActive = (pathname: string, href: string) =>
-  href === "/" ? pathname === "/" : pathname.startsWith(href);

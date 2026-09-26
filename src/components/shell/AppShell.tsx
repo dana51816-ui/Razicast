@@ -1,29 +1,26 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { useStore } from "@/lib/store";
 import { Toaster } from "../ui/Toaster";
-import { BottomNav } from "./BottomNav";
-import { Sidebar } from "./Sidebar";
+import { AddMenu } from "./AddMenu";
+import { FlowHost } from "./FlowHost";
+import { Rail } from "./Rail";
+import { TabBar } from "./TabBar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const { hydrated } = useStore();
   return (
     <>
-      <div className="app-backdrop" aria-hidden />
-      <Sidebar />
-      <div className="relative z-10 lg:ps-[244px] min-h-dvh">
-        <motion.main
-          key={pathname}
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto w-full max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-[calc(env(safe-area-inset-top)+16px)] lg:pt-8 pb-nav"
-        >
-          {children}
-        </motion.main>
+      <Rail />
+      <div className="lg:ps-[232px] min-h-dvh overflow-x-clip">
+        <main className="mx-auto w-full max-w-[1080px] px-5 sm:px-8 pt-[calc(env(safe-area-inset-top)+20px)] lg:pt-10 pb-nav">
+          {/* Render once saved data is loaded, so numbers never jump from demo to saved */}
+          {hydrated ? children : <div className="h-[60vh]" aria-busy="true" />}
+        </main>
       </div>
-      <BottomNav />
+      <TabBar />
+      <AddMenu />
+      <FlowHost />
       <Toaster />
     </>
   );

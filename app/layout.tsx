@@ -1,22 +1,32 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Heebo } from "next/font/google";
+import { IBM_Plex_Sans_Hebrew, Karantina } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
-const heebo = Heebo({ subsets: ["hebrew", "latin"], variable: "--font-heebo", display: "swap" });
+const plex = IBM_Plex_Sans_Hebrew({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plex",
+  display: "swap",
+});
+const karantina = Karantina({
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "700"],
+  variable: "--font-karantina",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "RAZICAST CONTROL",
   description: "תמונת מצב עסקית בזמן אמת",
   applicationName: "Razicast Control",
-  appleWebApp: { capable: true, title: "Razicast", statusBarStyle: "black-translucent" },
+  appleWebApp: { capable: true, title: "Razicast", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0c0f",
+  themeColor: "#efefec",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -24,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${geist.variable} ${heebo.variable}`}>
+    <html lang="he" dir="rtl" className={`${plex.variable} ${karantina.variable}`}>
       <body>
         <StoreProvider>
           <AppShell>{children}</AppShell>

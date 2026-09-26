@@ -1,31 +1,29 @@
 import { createRoot } from "react-dom/client";
-import { ActivityScreen } from "@/components/activity/ActivityScreen";
-import { CloseMonthScreen } from "@/components/close/CloseMonthScreen";
-import { Dashboard } from "@/components/dashboard/Dashboard";
-import { InstructorsScreen } from "@/components/instructors/InstructorsScreen";
-import { ReceiptsScreen } from "@/components/receipts/ReceiptsScreen";
+import { HomeScreen } from "@/components/home/HomeScreen";
+import { InstructorScreen } from "@/components/instructor/InstructorScreen";
+import { MonthScreen } from "@/components/month/MonthScreen";
 import { AppShell } from "@/components/shell/AppShell";
+import { TeamScreen } from "@/components/team/TeamScreen";
 import { StoreProvider } from "@/lib/store";
 import { splitUrl, useUrl } from "./shims/router";
 
 const ROUTES: Record<string, () => React.ReactElement> = {
-  "/": () => <Dashboard />,
-  "/activity": () => <ActivityScreen />,
-  "/instructors": () => <InstructorsScreen />,
-  "/receipts": () => <ReceiptsScreen />,
-  "/close": () => <CloseMonthScreen />,
+  "/": () => <HomeScreen />,
+  "/team": () => <TeamScreen />,
+  "/instructor": () => <InstructorScreen />,
+  "/month": () => <MonthScreen />,
 };
 
-function Preview() {
+function Screen() {
   const { pathname } = splitUrl(useUrl());
-  const Screen = ROUTES[pathname] ?? ROUTES["/"];
-  return (
-    <StoreProvider>
-      <AppShell>
-        <Screen />
-      </AppShell>
-    </StoreProvider>
-  );
+  const Page = ROUTES[pathname] ?? ROUTES["/"];
+  return <Page />;
 }
 
-createRoot(document.getElementById("root")!).render(<Preview />);
+createRoot(document.getElementById("root")!).render(
+  <StoreProvider>
+    <AppShell>
+      <Screen />
+    </AppShell>
+  </StoreProvider>,
+);

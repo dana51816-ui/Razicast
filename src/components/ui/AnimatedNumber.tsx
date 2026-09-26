@@ -4,43 +4,45 @@ import { animate, useReducedMotion } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { cn } from "./cn";
 
+/** Counts from the previous value to the new one — so a change in profit is seen, not just shown. */
 export function AnimatedNumber({
   value,
   format,
   className,
-  duration = 0.9,
+  duration = 1,
+  from,
 }: {
   value: number;
+  /** Start the first animation here (e.g. the value before a save) */
+  from?: number;
   format: (n: number) => string;
   className?: string;
   duration?: number;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
-  const from = useRef(0);
+  const prev = useRef<number | null>(from ?? null);
   const reduce = useReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (reduce) {
+    const from = prev.current ?? 0;
+    prev.current = value;
+    if (reduce || from === value) {
       el.textContent = format(value);
-      from.current = value;
       return;
     }
-    const controls = animate(from.current, value, {
+    const c = animate(from, value, {
       duration,
-      ease: [0.22, 1, 0.36, 1],
-      onUpdate: (v) => {
-        el.textContent = format(v);
-      },
+      ease: [0.2, 0.8, 0.2, 1],
+      onUpdate: (v) => (el.textContent = format(v)),
     });
-    from.current = value;
-    return () => controls.stop();
+    return () => c.stop();
   }, [value, format, duration, reduce]);
 
   return (
     <span ref={ref} className={cn("num", className)}>
-      {format(reduce ? value : from.current)}
+      {format(prev.current ?? value)}
     </span>
   );
 }

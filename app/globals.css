@@ -1,145 +1,104 @@
 @import "tailwindcss";
 
-/* ───────────────────────── RAZICAST CONTROL — design tokens ───────────────────────── */
+/* ───────────────────────── THE SPLIT — design tokens ─────────────────────────
+   Stone ground, ink type, one cobalt for the company's share and primary action,
+   sand for instructor payments. Red only for real losses. Amber dashed only for
+   missing information. */
 @theme {
-  --font-sans: var(--font-geist), var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
-  --font-hebrew: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-plex), "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  --font-display: var(--font-karantina), "Karantina", var(--font-plex), sans-serif;
 
-  /* Surfaces: deep graphite, layered */
-  --color-ink-950: #07080a;
-  --color-ink-900: #0b0c0f;
-  --color-ink-850: #101215;
-  --color-ink-800: #15171b;
-  --color-ink-700: #1c1f24;
-  --color-ink-600: #262a31;
-  --color-ink-500: #353a43;
+  --color-stone: #efefec;
+  --color-stone-2: #e2e2de;
+  --color-stone-3: #d5d5d0;
+  --color-paper: #ffffff;
+  --color-well: #f2f2ef;
+  --color-rule: #d9d9d4;
 
-  /* Text */
-  --color-fg: #eef0f3;
-  --color-fg-2: #b4b9c2;
-  --color-fg-3: #7d838e;
-  --color-fg-4: #555b66;
+  --color-ink: #0d0e10;
+  --color-ink-2: #54575e;
+  --color-ink-3: #8e9097;
+  --color-ink-soft: #26282c;
 
-  /* The one accent — "signal lime" */
-  --color-signal: #c8f24a;
-  --color-signal-strong: #d8ff5c;
-  --color-signal-ink: #0d1203;
+  --color-cobalt: #2b35e8;
+  --color-cobalt-soft: #d9dbff;
 
-  /* Chart series (validated vs #101215 dark surface) */
-  --color-series-revenue: #7aa326;
-  --color-series-payout: #6384da;
+  --color-sand: #cfc6b6;
+  --color-sand-ink: #3a342b;
+  --color-sand-rule: #8c8475;
 
-  /* Semantic */
-  --color-pos: #3ecf8e;
-  --color-warn: #f5a524;
-  --color-neg: #ff5d6c;
+  --color-loss: #c8333a;
+  --color-loss-ink: #b42a2f;
+  --color-loss-wash: #f6d9d7;
 
-  --radius-card: 18px;
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --color-amber: #d9962b;
+  --color-amber-dot: #e3a33a;
+  --color-amber-ink: #8a5300;
+  --color-amber-wash: #f7ebd3;
 }
 
 :root {
-  color-scheme: dark;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top: env(safe-area-inset-top, 0px);
+  color-scheme: light;
+  --nav-h: 70px;
 }
 
 html,
 body {
-  background: var(--color-ink-900);
-  color: var(--color-fg);
+  background: var(--color-stone);
+  color: var(--color-ink);
 }
 
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
   text-rendering: optimizeLegibility;
-  overscroll-behavior-y: none;
 }
 
-/* Cinematic backdrop: a single restrained glow + grain-free vignette */
-.app-backdrop {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(900px 480px at 85% -10%, rgba(200, 242, 74, 0.07), transparent 60%),
-    radial-gradient(700px 500px at 0% 0%, rgba(99, 132, 218, 0.06), transparent 60%),
-    linear-gradient(180deg, #0b0c0f 0%, #090a0c 100%);
-}
-
-/* Numbers: tabular, LTR-isolated */
+/* Numbers: tabular, isolated left-to-right inside RTL text */
 .num {
-  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum" 1, "ss01" 1;
-  letter-spacing: -0.01em;
-  unicode-bidi: isolate;
   direction: ltr;
+  unicode-bidi: isolate;
   display: inline-block;
 }
 
-/* Surfaces */
-.surface {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012));
-  border: 1px solid rgba(255, 255, 255, 0.065);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.4);
-}
-.surface-raised {
-  background: linear-gradient(180deg, #181a1f, #131519);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 20px 50px -20px rgba(0, 0, 0, 0.7);
-}
-.hairline {
-  border-color: rgba(255, 255, 255, 0.06);
-}
-.glass {
-  background: rgba(14, 15, 18, 0.72);
-  backdrop-filter: saturate(160%) blur(20px);
-  -webkit-backdrop-filter: saturate(160%) blur(20px);
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  color: var(--color-fg-3);
-  font-weight: 500;
+/* A real loss: red with a 135° texture so it never relies on color alone */
+.loss-stripes {
+  background: repeating-linear-gradient(135deg, var(--color-loss) 0 4px, #f2c9c9 4px 8px);
 }
 
-.latin-caps {
-  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  direction: ltr;
-  unicode-bidi: isolate;
+/* Missing information: always dashed amber */
+.missing-line {
+  border: 1.5px dashed var(--color-amber);
 }
 
-/* Skeleton shimmer */
-.skeleton {
-  position: relative;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.045);
-  border-radius: 8px;
+.pb-nav {
+  padding-bottom: calc(var(--nav-h) + 44px + env(safe-area-inset-bottom, 0px));
 }
-.skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
-  animation: shimmer 1.3s infinite;
-}
-@keyframes shimmer {
-  to {
-    transform: translateX(-100%);
+@media (min-width: 1024px) {
+  .pb-nav {
+    padding-bottom: 64px;
   }
+}
+
+button,
+a,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 2px;
+}
+input:focus {
+  outline: 2px solid var(--color-cobalt);
+  outline-offset: 2px;
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -149,24 +108,6 @@ body {
   scrollbar-width: none;
 }
 
-.focus-ring:focus-visible,
-button:focus-visible,
-a:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 2px solid var(--color-signal);
-  outline-offset: 2px;
-}
-
-.pb-nav {
-  padding-bottom: calc(96px + var(--safe-bottom));
-}
-@media (min-width: 1024px) {
-  .pb-nav {
-    padding-bottom: 48px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -174,20 +115,4 @@ input:focus-visible {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-}
-
-/* Recharts: kill default focus outline on svg */
-.recharts-wrapper svg:focus,
-.recharts-surface:focus {
-  outline: none;
-}
-
-/* Loss segment: red with a 45° texture so it never relies on color alone */
-.loss-hatch {
-  background-color: rgba(255, 93, 108, 0.35);
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(255, 93, 108, 0.95) 0 2px,
-    transparent 2px 5px
-  );
 }

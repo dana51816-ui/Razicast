@@ -17,8 +17,15 @@ function set(url: string) {
 }
 
 export function navigate(url: string, opts: { replace?: boolean; scroll?: boolean } = {}) {
-  set(url);
-  if (opts.scroll !== false) window.scrollTo({ top: 0 });
+  const hashAt = url.indexOf("#");
+  const hash = hashAt === -1 ? "" : url.slice(hashAt + 1);
+  set(hashAt === -1 ? url : url.slice(0, hashAt));
+  if (hash) {
+    // Wait for the new screen to render, then bring the anchor into view
+    setTimeout(() => document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  } else if (opts.scroll !== false) {
+    window.scrollTo({ top: 0 });
+  }
 }
 
 function subscribe(l: Listener) {
