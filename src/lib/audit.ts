@@ -17,7 +17,8 @@ export type IssueAction =
   | { type: "ackLoss"; instructorId: ID; month: MonthKey }
   | { type: "openInstructor"; instructorId: ID }
   | { type: "editTerms"; instructorId: ID }
-  | { type: "goto"; href: string };
+  | { type: "goto"; href: string }
+  | { type: "openBackup" };
 
 export type Severity = "blocker" | "attention" | "info";
 
@@ -189,6 +190,21 @@ export function homeIssues(data: AppData, month: MonthKey, limit = 4) {
     });
   }
   list.push(...a.info);
+
+  // Data the user entered lives only on this device until it is backed up
+  const userData = data.activities.some((x) => x.origin === "user") || data.instructors.some((x) => x.origin === "user");
+  const last = data.settings.lastBackupAt ? Date.parse(data.settings.lastBackupAt) : null;
+  const stale = last === null || Date.now() - last > 7 * 86400000;
+  if (userData && stale) {
+    list.splice(list.filter((i) => i.severity === "blocker").length, 0, {
+      id: "backup",
+      severity: "info",
+      tone: "neutral",
+      title: last === null ? "עוד לא נעשה גיבוי" : "הגיבוי האחרון ישן משבוע",
+      why: "הנתונים שמורים רק במכשיר הזה. קובץ גיבוי שומר עליהם גם אם המכשיר יוחלף.",
+      action: { label: "גיבוי עכשיו", run: { type: "openBackup" } },
+    });
+  }
   return { shown: list.slice(0, limit), more: Math.max(0, list.length - limit), total: list.length };
 }
 

@@ -11,6 +11,7 @@ import { MonthPicker } from "../shell/MonthPicker";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import { cn } from "../ui/cn";
 import { IssueRow } from "../ui/IssueRow";
+import { ActivityLog } from "./ActivityLog";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 
@@ -157,6 +158,8 @@ export function MonthScreen() {
               />
             </button>
           </label>
+
+          <ActivityLog />
         </div>
 
         {/* Reconciliation + close */}
@@ -194,12 +197,20 @@ export function MonthScreen() {
           )}
 
           {closed ? (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-ink-soft px-4 py-3">
-              <IconLock className="size-5 shrink-0" />
-              <span className="flex-1 text-[14px]">
-                <b className="block">{mName} נסגר</b>
-                <span className="text-ink-3">{closedAt ? new Date(closedAt).toLocaleDateString("he-IL") : ""}</span>
-              </span>
+            <div className="mt-4 flex items-center justify-between gap-3">
+              {/* The stamp lands on the month */}
+              <motion.div
+                key={closedAt ?? "closed"}
+                initial={{ scale: 2.4, opacity: 0, rotate: -18 }}
+                animate={{ scale: 1, opacity: 1, rotate: -7 }}
+                transition={{ type: "spring", stiffness: 320, damping: 15, mass: 0.8 }}
+                className="rounded-[14px] border-[3px] border-white px-4 py-1.5 text-center"
+              >
+                <div className="display text-[38px] leading-[0.9] tracking-[0.04em]">נסגר</div>
+                <div className="num text-[11px] font-bold tracking-[0.15em] text-ink-3">
+                  {closedAt ? new Date(closedAt).toLocaleDateString("he-IL") : ""}
+                </div>
+              </motion.div>
               <button type="button" onClick={() => store.closeMonth(month, false)} className="h-10 px-3 rounded-xl text-[13px] font-semibold text-ink-3 hover:text-white">
                 פתיחה מחדש
               </button>

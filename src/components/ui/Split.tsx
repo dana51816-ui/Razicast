@@ -15,6 +15,8 @@ export function Split({
   labels = false,
   className,
   delay = 0,
+  start = true,
+  ghost,
 }: {
   revenue: number;
   payment: number;
@@ -23,6 +25,10 @@ export function Split({
   labels?: boolean;
   className?: string;
   delay?: number;
+  /** Hold empty until true */
+  start?: boolean;
+  /** Where the split stood before (e.g. last month): payment share 0–1, drawn as a dashed marker */
+  ghost?: { share: number; label: string } | null;
 }) {
   const reduce = useReducedMotion();
   const loss = payment > revenue;
@@ -31,15 +37,29 @@ export function Split({
   const second = 100 - first;
   const radius = Math.min(10, height / 3);
   const t = { duration: reduce ? 0 : 1, ease: [0.2, 0.8, 0.2, 1] as const };
+  const showGhost = ghost && !loss && ghost.share > 0 && ghost.share < 1;
 
   return (
-    <div className={cn("flex w-full gap-[3px]", className)} style={{ height }} aria-hidden>
+    <div className={cn("relative flex w-full gap-[3px]", className)} style={{ height }} aria-hidden>
+      {showGhost && (
+        <motion.div
+          className="absolute -top-2 -bottom-2 z-10 w-0 border-r-2 border-dashed border-ink pointer-events-none"
+          style={{ right: `${ghost!.share * 100}%` }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: start ? 1 : 0 }}
+          transition={{ delay: delay + 1.1, duration: 0.4 }}
+        >
+          <span className="absolute top-3 right-0 translate-x-1/2 rounded-full bg-stone px-1.5 text-[10.5px] font-bold leading-[18px] whitespace-nowrap">
+            {ghost!.label}
+          </span>
+        </motion.div>
+      )}
       {first > 0 && (
         <motion.div
           className="bg-sand flex items-end overflow-hidden"
           style={{ borderRadius: second > 0 ? `0 ${radius}px ${radius}px 0` : radius }}
           initial={{ width: 0 }}
-          animate={{ width: `${first}%` }}
+          animate={{ width: start ? `${first}%` : 0 }}
           transition={{ ...t, delay }}
         >
           {labels && height >= 44 && (
@@ -54,7 +74,7 @@ export function Split({
           className={cn("flex items-end overflow-hidden", loss ? "loss-stripes" : "bg-cobalt")}
           style={{ borderRadius: first > 0 ? `${radius}px 0 0 ${radius}px` : radius }}
           initial={{ width: 0 }}
-          animate={{ width: `${second}%` }}
+          animate={{ width: start ? `${second}%` : 0 }}
           transition={{ ...t, delay: delay + 0.12 }}
         >
           {labels && height >= 44 && !loss && (

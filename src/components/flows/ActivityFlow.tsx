@@ -17,7 +17,7 @@ import { dayMonth, formatILS, monthName } from "@/lib/format";
 import { TODAY, useStore, type Flow } from "@/lib/store";
 import type { Amount } from "@/lib/types";
 import { IconCheck, IconNext } from "../shell/icons";
-import { AnimatedNumber } from "../ui/AnimatedNumber";
+import { RollTo } from "../ui/RollingNumber";
 import { cn } from "../ui/cn";
 import { Split } from "../ui/Split";
 import { MissingTag } from "../ui/Tags";
@@ -31,19 +31,26 @@ const ORDER: Step[] = ["who", "where", "qty", "review"];
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind: "activity" }>; onClose: () => void }) {
-  const { data, addActivity } = useStore();
+  const { data, addActivity, updateActivity } = useStore();
   const router = useRouter();
 
-  const [instructorId, setInstructorId] = useState<string | null>(preset.instructorId ?? null);
-  const [frameworkId, setFrameworkId] = useState<string | null>(preset.frameworkId ?? null);
-  const [step, setStep] = useState<Step>(instructorId ? (frameworkId ? "qty" : "where") : "who");
-  const [quantity, setQuantity] = useState(1);
-  const [travelUnits, setTravelUnits] = useState<number | null>(null);
-  const [date, setDate] = useState(TODAY);
-  const [revManual, setRevManual] = useState("");
-  const [payManual, setPayManual] = useState("");
-  const [revOverride, setRevOverride] = useState(false);
-  const [payOverride, setPayOverride] = useState(false);
+  // Repeat or edit start from an existing activity
+  const source = data.activities.find((a) => a.id === (preset.editId ?? preset.repeatOf)) ?? null;
+  const editing = !!(preset.editId && source);
+  const repeating = !!(preset.repeatOf && source);
+  const manualOf = (a: Amount | undefined) => (a && a.mode === "manual" && a.value !== null ? String(a.value) : "");
+
+  const [instructorId, setInstructorId] = useState<string | null>(source?.instructorId ?? preset.instructorId ?? null);
+  const [frameworkId, setFrameworkId] = useState<string | null>(source ? source.frameworkId : preset.frameworkId ?? null);
+  const [step, setStep] = useState<Step>(source ? "review" : instructorId ? (frameworkId ? "qty" : "where") : "who");
+  const [quantity, setQuantity] = useState(source?.quantity ?? 1);
+  const [travelUnits, setTravelUnits] = useState<number | null>(source ? source.travelUnits : null);
+  const [date, setDate] = useState(editing ? source!.date : preset.date ?? TODAY);
+  // A manual amount from before is offered again (it was the user's own number), never a guessed one
+  const [revManual, setRevManual] = useState(manualOf(source?.revenue));
+  const [payManual, setPayManual] = useState(manualOf(source?.instructorPayment));
+  const [revOverride, setRevOverride] = useState(editing && source?.revenue.mode === "manual");
+  const [payOverride, setPayOverride] = useState(editing && source?.instructorPayment.mode === "manual");
   const [result, setResult] = useState<{ before: number | null; delta: number | null; complete: boolean } | null>(null);
 
   const instructor = data.instructors.find((i) => i.id === instructorId) ?? null;
@@ -89,17 +96,24 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
   const save = () => {
     if (!instructor) return;
     const before = liveMonthProfit;
-    addActivity({
+    const values = {
       date,
       instructorId: instructor.id,
       frameworkId,
       quantity,
-      unitLabel: quote?.unitPlural ?? "יחידות",
+      unitLabel: editing && quantity === source!.quantity && frameworkId === source!.frameworkId ? source!.unitLabel : quote?.unitPlural ?? "יחידות",
       travelUnits: instructor.travelRate ? travel : 0,
       revenue,
       instructorPayment: payment,
-    });
-    setResult({ before, delta: profit, complete: profit !== null });
+    };
+    if (editing) {
+      const old = source!.revenue.value !== null && source!.instructorPayment.value !== null ? source!.revenue.value - source!.instructorPayment.value : null;
+      updateActivity(source!.id, values);
+      setResult({ before, delta: profit === null ? null : profit - (old ?? 0), complete: profit !== null });
+    } else {
+      addActivity(values);
+      setResult({ before, delta: profit, complete: profit !== null });
+    }
     setStep("done");
   };
 
@@ -239,6 +253,9 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
 
       {step === "review" && instructor && quote && (
         <>
+          {(editing || repeating) && (
+            <div className="mb-1 text-[13px] font-bold text-cobalt">{editing ? "עריכת פעילות" : "שוב, היום · התעריפים העדכניים"}</div>
+          )}
           <div className="text-[14px] text-ink-2 leading-snug">
             {[instructor.name, framework?.name ?? "בלי מסגרת", `${quantity} ${quote.unitPlural}`, travel ? `${travel} נסיעות` : null]
               .filter(Boolean)
@@ -310,7 +327,7 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
           </div>
 
           <PrimaryButton className="mt-7" disabled={profit === null} onClick={save}>
-            שמור פעילות
+            {editing ? "שמירת שינויים" : "שמור פעילות"}
           </PrimaryButton>
           {profit === null && (
             <button type="button" onClick={save} className="mt-1 w-full min-h-11 text-[14px] font-semibold text-ink-2">
@@ -325,23 +342,23 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
           <DoneMark tone={result.complete ? "cobalt" : "amber"}>
             <IconCheck strokeWidth={2.8} className="size-8" />
           </DoneMark>
-          <h2 className="mt-5 text-[28px] font-bold leading-tight">הפעילות נשמרה</h2>
+          <h2 className="mt-5 text-[28px] font-bold leading-tight">{editing ? "השינוי נשמר" : "הפעילות נשמרה"}</h2>
           <p className="mt-1 text-[14px] text-ink-2">
             {[instructor.name, framework?.name, `${quantity} ${quote?.unitPlural ?? ""}`, dayMonth(date)].filter(Boolean).join(" · ")}
           </p>
 
           <div className="mt-9 text-[15px] font-semibold">רווח {monthName(month)} עכשיו</div>
           {liveMonthProfit !== null ? (
-            <div dir="ltr" className="flex items-start justify-end gap-1">
-              <span className="display text-[46px] leading-none mt-3">₪</span>
-              <AnimatedNumber value={liveMonthProfit} from={result.before ?? 0} format={fmt} className="display text-[min(116px,28vw)] leading-[0.82]" />
+            <div dir="ltr" className="flex items-start justify-end gap-1.5">
+              <span className="display text-[46px] leading-none mt-4">₪</span>
+              <RollTo from={fmt(result.before ?? 0)} to={fmt(liveMonthProfit)} className="display text-[min(116px,28vw)]" />
             </div>
           ) : (
             <MissingTag className="mt-2">עדיין אין פעילויות שלמות החודש</MissingTag>
           )}
           <div className={cn("mt-2 text-[15px] font-bold", !result.complete ? "text-amber-ink" : (result.delta ?? 0) < 0 ? "text-loss-ink" : "text-cobalt")}>
             {result.complete
-              ? `${(result.delta ?? 0) >= 0 ? "+" : "-"}${formatILS(Math.abs(result.delta ?? 0))} מהפעילות הזו`
+              ? `${(result.delta ?? 0) >= 0 ? "+" : "-"}${formatILS(Math.abs(result.delta ?? 0))} ${editing ? "מהשינוי" : "מהפעילות הזו"}`
               : "הרווח לא השתנה: הפעילות נשמרה עם מידע חסר ותופיע בבדיקת סוף החודש"}
           </div>
 

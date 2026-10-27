@@ -14,7 +14,7 @@ const ICONS = { "/": IconHome, "/team": IconTeam, "/month": IconMonth } as const
 /** Desktop navigation: the same three places and the same add, as a side rail. */
 export function Rail() {
   const pathname = usePathname();
-  const { setAddMenuOpen } = useStore();
+  const { setAddMenuOpen, openFlow } = useStore();
   const active = activeHref(pathname);
   return (
     <aside className="hidden lg:flex fixed inset-y-0 start-0 z-40 w-[232px] flex-col px-4 py-8 border-e border-rule">
@@ -52,6 +52,13 @@ export function Rail() {
         })}
       </nav>
       <div className="mt-auto px-2">
+        <button
+          type="button"
+          onClick={() => openFlow({ kind: "backup" })}
+          className="mb-3 block h-10 px-3 -mx-3 rounded-xl text-[14px] font-semibold text-ink-2 hover:bg-stone-2"
+        >
+          גיבוי ושחזור
+        </button>
         <DemoTag />
       </div>
     </aside>

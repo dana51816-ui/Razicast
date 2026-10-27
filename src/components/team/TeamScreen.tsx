@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { activitiesIn, FINANCIAL_LABEL, teamMonth, totalsOf, type InstructorMonth } from "@/lib/calc";
+import { useState } from "react";
+import { activitiesIn, FINANCIAL_LABEL, FRAMEWORK_TYPES, rateLine, teamMonth, totalsOf, type InstructorMonth } from "@/lib/calc";
 import { formatILS, monthLabel, signedILS } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { MonthPicker } from "../shell/MonthPicker";
@@ -11,6 +12,7 @@ import { Dot } from "../ui/Tags";
 
 export function TeamScreen() {
   const { data, month, openFlow } = useStore();
+  const [tab, setTab] = useState<"people" | "frameworks">("people");
   const team = teamMonth(data, month);
   const total = totalsOf(activitiesIn(data, month));
   const maxRev = Math.max(1, ...team.map((s) => s.totals.revenue));
@@ -34,6 +36,30 @@ export function TeamScreen() {
         <MonthPicker />
       </header>
 
+      <div role="tablist" aria-label="תצוגה" className="mt-5 inline-flex rounded-[14px] bg-stone-2 p-1">
+        {(
+          [
+            ["people", "מדריכים"],
+            ["frameworks", "מסגרות"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className="relative h-10 px-5 rounded-[11px] text-[14px] font-bold"
+          >
+            {tab === key && (
+              <motion.span layoutId="team-tab" className="absolute inset-0 rounded-[11px] bg-paper shadow-sm" transition={{ type: "spring", stiffness: 500, damping: 38 }} />
+            )}
+            <span className="relative">{label}</span>
+          </button>
+        ))}
+      </div>
+
+      {tab === "people" ? (
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-12 lg:items-start">
         {/* ── The map: where each person stands; size = revenue ── */}
         <section aria-label="מפת רווחיות" className="mt-6">
@@ -122,7 +148,73 @@ export function TeamScreen() {
           </button>
         </section>
       </div>
+      ) : (
+        <FrameworksView />
+      )}
     </>
+  );
+}
+
+/** Frameworks and what each one pays — set a rate once, every activity there is calculated. */
+function FrameworksView() {
+  const { data, month, openFlow } = useStore();
+  const acts = activitiesIn(data, month);
+  const list = [...data.frameworks].sort((a, b) => {
+    const ca = acts.filter((x) => x.frameworkId === a.id).length;
+    const cb = acts.filter((x) => x.frameworkId === b.id).length;
+    return cb - ca || b.createdAt.localeCompare(a.createdAt);
+  });
+  const withoutRate = list.filter((f) => f.clientRate === null && f.clientBillingModel !== "custom").length;
+
+  return (
+    <section aria-label="מסגרות" className="mt-6 max-w-[640px]">
+      {withoutRate > 0 && (
+        <p className="mb-3 rounded-[18px] missing-line bg-amber-wash px-4 py-3 text-[13.5px] leading-relaxed">
+          ל־<span className="num font-bold">{withoutRate}</span> מסגרות אין תעריף לקוח. בלי תעריף, כל פעילות שם תצטרך הזנת הכנסה ידנית. מגדירים פעם אחת, וכל פעילות מחושבת לבד.
+        </p>
+      )}
+      {list.map((f, i) => {
+        const count = acts.filter((x) => x.frameworkId === f.id).length;
+        const rate = f.clientBillingModel ? rateLine(f.clientBillingModel, f.clientRate) : null;
+        return (
+          <motion.div
+            key={f.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: Math.min(i, 12) * 0.03 }}
+            className="flex items-center gap-3 min-h-[68px] py-2 border-b border-rule"
+          >
+            <span className="flex-1 min-w-0">
+              <span className="block text-[16px] font-bold truncate">{f.name}</span>
+              <span className="block text-[12.5px] text-ink-2">
+                {FRAMEWORK_TYPES[f.type]} · <span className="num">{count}</span> פעילויות ב{monthLabel(month).split(" ")[0]}
+              </span>
+            </span>
+            {rate ? (
+              <button type="button" onClick={() => openFlow({ kind: "framework", editId: f.id })} className="text-end">
+                <span className="num block text-[15px] font-bold">{rate}</span>
+                <span className="block text-[12px] text-ink-2 underline underline-offset-4">עריכה</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openFlow({ kind: "framework", editId: f.id })}
+                className="h-10 px-3.5 rounded-xl bg-ink text-white text-[13.5px] font-bold whitespace-nowrap"
+              >
+                הגדרת תעריף
+              </button>
+            )}
+          </motion.div>
+        );
+      })}
+      <button
+        type="button"
+        onClick={() => openFlow({ kind: "framework" })}
+        className="mt-5 w-full h-14 rounded-[18px] border-[1.5px] border-dashed border-ink text-[16px] font-bold"
+      >
+        + מסגרת חדשה
+      </button>
+    </section>
   );
 }
 

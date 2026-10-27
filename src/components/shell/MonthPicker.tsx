@@ -9,7 +9,7 @@ import { cn } from "../ui/cn";
 import { IconCheck, IconChevronDown } from "./icons";
 
 export function MonthPicker({ className }: { className?: string }) {
-  const { data, month, setMonth, resetDemo, notify } = useStore();
+  const { data, month, setMonth, resetDemo, notify, openFlow } = useStore();
   const [open, setOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -79,6 +79,16 @@ export function MonthPicker({ className }: { className?: string }) {
               })}
             </ul>
             <div className="mt-1 pt-1 border-t border-rule">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  openFlow({ kind: "backup" });
+                }}
+                className="w-full h-11 px-3 rounded-xl text-start text-[14px] font-bold hover:bg-stone"
+              >
+                גיבוי ושחזור נתונים
+              </button>
               {confirmReset ? (
                 <div className="p-2">
                   <p className="text-[13px] text-ink-2 leading-snug">כל מה שהוזן במכשיר הזה יימחק ונתוני הדמו יחזרו. להמשיך?</p>

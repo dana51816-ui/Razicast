@@ -99,6 +99,8 @@ export interface MonthRecord {
 export interface Settings {
   /** Business rule: do missing receipts block closing a month? */
   receiptsBlockClosing: boolean;
+  /** When the last backup file was made on this device */
+  lastBackupAt?: string | null;
 }
 
 export interface AppData {

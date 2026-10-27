@@ -18,7 +18,7 @@ import {
 } from "@/lib/calc";
 import { dayMonth, formatILS, monthName, monthShort, signedILS } from "@/lib/format";
 import { useStore } from "@/lib/store";
-import { copyText } from "@/lib/useRunAction";
+import { copyText, openExternal, whatsappLink } from "@/lib/useRunAction";
 import { IconBack, IconCheck } from "../shell/icons";
 import { MonthPicker } from "../shell/MonthPicker";
 import { cn } from "../ui/cn";
@@ -187,7 +187,12 @@ export function InstructorScreen() {
                   const f = frameworkOf(data, a.frameworkId);
                   const p = a.revenue.value !== null && a.instructorPayment.value !== null ? a.revenue.value - a.instructorPayment.value : null;
                   return (
-                    <li key={a.id} className="flex items-center gap-3.5 py-3 border-b border-rule last:border-b-0">
+                    <li key={a.id} className="border-b border-rule last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() => openFlow({ kind: "activityDetail", activityId: a.id })}
+                        className="w-full flex items-center gap-3.5 py-3 text-start active:bg-stone-2/60 transition-colors"
+                      >
                       <span className="w-10 shrink-0 text-center">
                         <b className="num block text-[20px] leading-none">{Number(a.date.slice(8))}</b>
                         <span className="block text-[11px] text-ink-2 mt-1">{monthShort(a.date.slice(0, 7))}</span>
@@ -208,10 +213,9 @@ export function InstructorScreen() {
                       {p !== null && a.frameworkId ? (
                         <b className={cn("num text-[15px]", p < 0 ? "text-loss-ink" : "text-cobalt")}>{signedILS(p)}</b>
                       ) : (
-                        <button type="button" onClick={() => openFlow({ kind: "resolve", activityId: a.id })} aria-label="השלמת מידע">
-                          <MissingTag className="h-9 px-3 text-[13px]">השלמה</MissingTag>
-                        </button>
+                        <MissingTag className="h-9 px-3 text-[13px]">השלמה</MissingTag>
                       )}
+                      </button>
                     </li>
                   );
                 })}
@@ -331,13 +335,15 @@ function ReceiptBlock({ instructorId }: { instructorId: string }) {
               setShowMsg(true);
               return;
             }
+            const wa = whatsappLink(instructor.phone, msg);
+            if (wa) openExternal(wa);
             const ok = await copyText(msg);
             store.markReminded(instructorId, month);
-            store.notify(ok ? "ההודעה הועתקה, אפשר להדביק בוואטסאפ" : "לא הצלחנו להעתיק. אפשר לסמן ולהעתיק ידנית");
+            store.notify(wa ? "נפתח וואטסאפ עם ההודעה" : ok ? "ההודעה הועתקה, אפשר להדביק בוואטסאפ" : "לא הצלחנו להעתיק. אפשר לסמן ולהעתיק ידנית");
           }}
           className="flex-1 h-[50px] rounded-2xl bg-ink text-white text-[15px] font-bold"
         >
-          {showMsg ? "העתקת ההודעה" : "צור תזכורת"}
+          {!showMsg ? "צור תזכורת" : instructor.phone ? "שליחה בוואטסאפ" : "העתקת ההודעה"}
         </button>
         <button
           type="button"

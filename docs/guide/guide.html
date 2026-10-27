@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>RAZICAST CONTROL · מדריך למשתמש</title>
+<style>
+/* Fonts are injected by build.mjs (local files, so the PDF never falls back) */
+/*FONTS*/
+:root{
+  --stone:#efefec; --stone2:#e2e2de; --paper:#fff; --rule:#d9d9d4;
+  --ink:#0d0e10; --ink2:#54575e; --ink3:#8e9097;
+  --cobalt:#2b35e8; --cobalt-soft:#d9dbff; --sand:#cfc6b6; --sand-ink:#3a342b;
+  --loss:#c8333a; --amber:#d9962b; --amber-ink:#8a5300; --amber-wash:#f7ebd3;
+}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--stone);color:var(--ink);font-family:"Plex",sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{width:210mm;height:297mm;padding:20mm 18mm 16mm;position:relative;overflow:hidden;page-break-after:always;background:var(--stone)}
+.page:last-child{page-break-after:auto}
+.display{font-family:"Karantina",sans-serif;font-weight:700}
+.n{direction:ltr;unicode-bidi:isolate;display:inline-block;font-variant-numeric:tabular-nums}
+.eyebrow{font-size:10pt;font-weight:600;color:var(--ink2);letter-spacing:.02em}
+h1{font-family:"Karantina",sans-serif;font-weight:700;font-size:64pt;line-height:.86;margin:4mm 0 0}
+h2{font-size:15pt;margin:0 0 2mm;font-weight:700}
+h3{font-size:12pt;margin:0 0 1mm;font-weight:700}
+p{font-size:10.5pt;line-height:1.6;margin:0 0 3mm}
+.lead{font-size:12.5pt;line-height:1.55;font-weight:500;max-width:150mm}
+.muted{color:var(--ink2)}
+.foot{position:absolute;bottom:9mm;left:18mm;right:18mm;display:flex;justify-content:space-between;font-size:8.5pt;color:var(--ink3)}
+.foot .wm{direction:ltr;letter-spacing:.22em;font-weight:700;color:var(--ink2)}
+.cols{display:grid;grid-template-columns:1fr 62mm;gap:10mm;align-items:start}
+.cols.wide{grid-template-columns:1fr 1fr}
+.phone{width:62mm;border-radius:7mm;border:2.2mm solid var(--ink);overflow:hidden;background:var(--stone);box-shadow:0 6mm 14mm -6mm rgba(13,14,16,.35)}
+.phone img{display:block;width:100%}
+.phone.sm{width:52mm;border-radius:6mm;border-width:1.8mm}
+.cap{font-size:8.5pt;color:var(--ink2);margin-top:2mm;text-align:center}
+ol.steps{list-style:none;margin:0;padding:0;counter-reset:s}
+ol.steps li{counter-increment:s;position:relative;padding:0 11mm 0 0;margin:0 0 4.2mm;font-size:10.5pt;line-height:1.55}
+ol.steps li::before{content:counter(s);position:absolute;right:0;top:-.5mm;width:7.5mm;height:7.5mm;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:10pt;display:grid;place-items:center;font-family:"Plex"}
+ol.steps li b{font-weight:700}
+.note{border-radius:4.5mm;padding:3.5mm 4.5mm;font-size:10pt;line-height:1.55;margin:4mm 0}
+.note.amber{background:var(--amber-wash);border:1.6px dashed var(--amber)}
+.note.ink{background:var(--ink);color:#fff}
+.note.paper{background:var(--paper)}
+.note b{font-weight:700}
+.tag{display:inline-block;border-radius:99px;padding:.3mm 2.6mm;font-size:9pt;font-weight:700;vertical-align:1px}
+.tag.cobalt{background:var(--cobalt);color:#fff}
+.tag.ink{background:var(--ink);color:#fff}
+.tag.amber{border:1.4px dashed var(--amber);color:var(--amber-ink)}
+.tag.loss{background:var(--loss);color:#fff}
+.btn{display:inline-block;border-radius:2.5mm;padding:.4mm 2.4mm;font-weight:700;font-size:9.5pt;background:var(--ink);color:#fff}
+.btn.c{background:var(--cobalt)}
+.btn.o{background:transparent;color:var(--ink);border:1.3px solid var(--ink)}
+/* The Split, drawn */
+.dim{position:relative;height:6mm}
+.dim::before{content:"";position:absolute;left:0;right:0;top:2.9mm;height:1.5px;background:var(--ink)}
+.dim i{position:absolute;top:1.4mm;width:1.5px;height:3.2mm;background:var(--ink)}
+.dim i:first-child{right:0}.dim i:last-child{left:0}
+.dim>span{position:absolute;inset:0;display:flex;justify-content:center}
+.dim>span b{background:var(--stone);padding:0 3mm;font-size:10pt;line-height:6mm;font-weight:600}
+.split{display:flex;gap:2px;height:15mm;margin-top:2mm}
+.split .s{background:var(--sand);border-radius:0 3mm 3mm 0;display:flex;align-items:flex-end;padding:2mm 3mm;font-size:9pt;font-weight:600;color:var(--sand-ink)}
+.split .c{background:var(--cobalt);border-radius:3mm 0 0 3mm;display:flex;align-items:flex-end;padding:2mm 3mm;font-size:9pt;font-weight:600;color:#fff}
+.legend{display:grid;grid-template-columns:repeat(2,1fr);gap:3mm 6mm;margin-top:6mm}
+.legend div{display:flex;gap:3mm;align-items:flex-start;font-size:10pt;line-height:1.45}
+.sw{flex:none;width:9mm;height:6mm;border-radius:1.5mm;margin-top:.6mm}
+.sw.sand{background:var(--sand)}.sw.cobalt{background:var(--cobalt)}
+.sw.loss{background:repeating-linear-gradient(135deg,var(--loss) 0 3px,#f2c9c9 3px 6px)}
+.sw.amber{border:1.6px dashed var(--amber);background:var(--amber-wash)}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-top:5mm}
+.tabs div{border-radius:4mm;background:var(--paper);padding:3.5mm;font-size:9.5pt;line-height:1.45}
+.tabs div b{display:block;font-size:11pt;margin-bottom:1mm}
+.tabs div.add{background:var(--cobalt);color:#fff}
+.faq h3{margin-top:4mm}
+.rule{height:1px;background:var(--rule);margin:5mm 0}
+.toc{list-style:none;padding:0;margin:8mm 0 0;columns:2;column-gap:10mm}
+.toc li{display:flex;gap:3mm;font-size:11pt;padding:2mm 0;border-bottom:1px solid var(--rule);break-inside:avoid}
+.toc li span:first-child{font-family:"Karantina";font-weight:700;font-size:16pt;line-height:1;width:7mm;color:var(--cobalt)}
+</style>
+</head>
+<body>
+
+<!-- ═════════ 1. COVER ═════════ -->
+<section class="page" style="background:var(--ink);color:#fff;padding:22mm 18mm">
+  <div class="eyebrow" style="color:var(--ink3)">מדריך למשתמש · גרסה 4 · אוקטובר 2026</div>
+  <div class="display" dir="ltr" style="font-size:118pt;line-height:.82;margin-top:34mm;text-align:right">RAZICAST</div>
+  <div dir="ltr" style="text-align:right;letter-spacing:.42em;font-weight:700;font-size:13pt;color:var(--ink3);margin-top:3mm">CONTROL</div>
+
+  <div style="margin-top:28mm">
+    <div class="dim"><i></i><span><b style="background:var(--ink);color:#fff">כל שקל שנכנס</b></span><i></i></div>
+    <style>.page:first-child .dim::before,.page:first-child .dim i{background:#fff}</style>
+    <div class="split" style="height:22mm">
+      <div class="s" style="width:52%">למדריכים</div>
+      <div class="c" style="width:48%">לחברה</div>
+    </div>
+  </div>
+
+  <p class="lead" style="color:#d9dbff;margin-top:16mm;max-width:140mm">
+    איך עובדים עם האפליקציה ביום־יום: מוסיפים מדריכים, מסגרות ופעילויות, מבינים את המספרים, סוגרים חודש, ושומרים על הנתונים כך שלא ילכו לאיבוד.
+  </p>
+  <div class="foot" style="color:var(--ink3)"><span>נכתב עבור רזי</span><span class="wm" style="color:#fff">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 2. IN ONE MINUTE ═════════ -->
+<section class="page">
+  <div class="eyebrow">בדקה אחת</div>
+  <h1>מה האפליקציה<br>עושה בשבילך</h1>
+  <p class="lead" style="margin-top:7mm">
+    על כל פעילות, האפליקציה מחשבת כמה נכנס מהלקוח, כמה משלמים למדריך, וכמה נשאר לחברה. מכל הפעילויות יחד היא בונה את תמונת החודש, ומראה מה דורש טיפול.
+  </p>
+
+  <h2 style="margin-top:9mm">"The Split": הפס שחוזר בכל מסך</h2>
+  <p class="muted">ההכנסות נמדדות, ואז מתחלקות לשניים. אותו פס מופיע לחודש כולו, לכל מדריך ולכל פעילות.</p>
+  <div class="dim"><i></i><span><b>הכנסות <span class="n">₪24,135</span></b></span><i></i></div>
+  <div class="split"><div class="s" style="width:51.8%">למדריכים <span class="n" style="margin-right:2mm">₪12,508</span></div><div class="c" style="width:48.2%">לחברה <span class="n" style="margin-right:2mm">₪11,627</span></div></div>
+
+  <div class="legend">
+    <div><span class="sw sand"></span><span><b>חול:</b> מה ששולם למדריכים.</span></div>
+    <div><span class="sw cobalt"></span><span><b>כחול:</b> מה שנשאר לחברה. גם הצבע של כפתורי הפעולה הראשיים.</span></div>
+    <div><span class="sw loss"></span><span><b>פסים אדומים:</b> הפסד אמיתי. שולם יותר ממה שנכנס, והנתונים מלאים.</span></div>
+    <div><span class="sw amber"></span><span><b>ענבר מקווקו:</b> מידע חסר. האפליקציה לא מנחשת, היא מחכה שתשלימו.</span></div>
+  </div>
+
+  <div class="note ink" style="margin-top:8mm">
+    <b>הכלל החשוב ביותר:</b> סכום חסר הוא "לא ידוע", ולעולם לא ₪0. פעילות בלי הכנסה לא נספרת כהפסד, היא נשארת בצד עד שמשלימים אותה, והרווח מסומן "לא סופי".
+  </div>
+
+  <h2 style="margin-top:8mm">ארבעה מקומות, זה הכל</h2>
+  <div class="tabs">
+    <div><b>ראשי</b>רווח החודש, הפס, דופק החודש ומה דורש טיפול.</div>
+    <div><b>צוות</b>מפת רווחיות, רשימת מדריכים ומסגרות עם תעריפים.</div>
+    <div><b>חודש</b>בדיקת סוף חודש, יומן הפעילויות וסגירה.</div>
+    <div class="add"><b>+ הוספה</b>פעילות, מדריך או מסגרת. נגיעה אחת מכל מסך.</div>
+  </div>
+  <div class="foot"><span class="n">2</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 3. GETTING STARTED ═════════ -->
+<section class="page">
+  <div class="eyebrow">מתחילים</div>
+  <h1>שמים את האפליקציה<br>על מסך הבית</h1>
+  <div class="cols" style="margin-top:9mm">
+    <div>
+      <p class="lead">זה הצעד הראשון והחשוב ביותר באייפון. מעבר לנוחות, זה מה ששומר על הנתונים.</p>
+      <ol class="steps" style="margin-top:6mm">
+        <li>פותחים את הקישור לאפליקציה ב-<b>Safari</b>.</li>
+        <li>נוגעים בכפתור <b>שיתוף</b> (הריבוע עם החץ למעלה).</li>
+        <li>גוללים ובוחרים <b>הוספה למסך הבית</b>, ואז <b>הוספה</b>.</li>
+        <li>מעכשיו פותחים את האפליקציה <b>רק מהאייקון</b> במסך הבית, לא מהדפדפן.</li>
+      </ol>
+      <div class="note amber">
+        <b>למה זה חשוב?</b> Safari מוחק נתונים של אתרים שלא נפתחו כשבוע. אפליקציה שנוספה למסך הבית מוגנת מזה. ובכל מקרה, כדאי לשמור גם קובץ גיבוי (עמוד 10).
+      </div>
+      <h2 style="margin-top:7mm">הפתיחה</h2>
+      <p>בכל פתיחה של האפליקציה מופיע רגע קצר: קו מדידה נמתח, הפס מתמלא ומתפצל לחלוקה האמיתית של החודש, והשם עולה. נגיעה במסך מדלגת. אחרי זה המספר הגדול מתגלגל ספרה אחר ספרה.</p>
+    </div>
+    <div>
+      <div class="phone"><img src="img/intro.png" alt=""></div>
+      <div class="cap">רגע הפתיחה: החלוקה האמיתית של החודש</div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">3</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 4. HOME ═════════ -->
+<section class="page">
+  <div class="eyebrow">המסך הראשי</div>
+  <h1>תמונת החודש<br>בחמש שניות</h1>
+  <div class="cols" style="margin-top:8mm">
+    <div>
+      <h3>1 · רווח החודש</h3>
+      <p>המספר הגדול. מתחתיו הרווחיות באחוזים וההשוואה לחודש הקודם. אם מופיע <span class="tag amber">רווח לא סופי</span>, יש פעילות עם מידע חסר שעוד לא נספרה.</p>
+      <h3>2 · הפס והקו המקווקו</h3>
+      <p>הפס מחלק את ההכנסות בין המדריכים לחברה. <b>הקו השחור המקווקו</b> מסמן איפה עמדה החלוקה בחודש הקודם: אם הכחול גדל מעבר לקו, נשאר לחברה יותר.</p>
+      <h3>3 · דופק החודש</h3>
+      <p>עמודה לכל יום בחודש. הגובה הוא ההכנסה של אותו יום, והצבע אומר מה קרה בו: כחול רווח, פסים אדומים הפסד, ענבר מקווקו חסר מידע. <b>נגיעה ביום</b> מראה את הפעילויות שלו, ויום ריק מציע להוסיף פעילות לאותו תאריך.</p>
+      <h3>4 · הוספה מהירה ו"שוב, היום"</h3>
+      <p>הפס השחור עם פעילות, מדריך ומסגרת. מתחתיו "שוב, היום": הצירופים האחרונים, כמו <b>אוקמפו · ילדי הפלא · 4</b>. נגיעה אחת פותחת את החישוב עם התאריך של היום והתעריפים העדכניים.</p>
+      <h3>5 · דורש טיפול</h3>
+      <p>רק מה שחשוב, וליד כל שורה כפתור שפותר אותה: <span class="btn">השלם עכשיו</span> <span class="btn o">תזכורות</span> <span class="btn o">בדיקה</span></p>
+    </div>
+    <div>
+      <div class="phone"><img src="img/home.png" alt=""></div>
+      <div class="cap">המסך הראשי</div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">4</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 5. ADD INSTRUCTOR + FRAMEWORK ═════════ -->
+<section class="page">
+  <div class="eyebrow">הוספה</div>
+  <h1>מדריך חדש,<br>מסגרת חדשה</h1>
+  <div class="cols wide" style="margin-top:8mm">
+    <div>
+      <h2>מדריך חדש</h2>
+      <ol class="steps">
+        <li><b>+ הוספה ← מדריך.</b> שם וטלפון. הטלפון משמש לשליחת תזכורות בוואטסאפ.</li>
+        <li><b>איך משלמים?</b> לפי קבוצה, שעה, יום, סכום קבוע או אחר. נגיעה אחת.</li>
+        <li><b>תעריף בסיס</b>, למשל <span class="n">₪110</span> לקבוצה, ואם צריך <b>תוספת נסיעה</b>.</li>
+        <li><b>נדרשת קבלה?</b> כן או לא.</li>
+        <li><b>בדיקה ושמירה.</b> נוגעים בשורה כדי לתקן, ואז <span class="btn c">הוסף מדריך</span></li>
+      </ol>
+      <div class="phone sm" style="margin:2mm auto 0"><img src="img/instructor-review.png" alt=""></div>
+    </div>
+    <div>
+      <h2>מסגרת חדשה</h2>
+      <ol class="steps">
+        <li><b>+ הוספה ← מסגרת.</b> שם, למשל בית ספר אוסישקין.</li>
+        <li><b>סוג:</b> ילדי הפלא, גפן, בית ספר, סדנה, פרטי או אחר.</li>
+        <li><b>איך הלקוח משלם</b> ו<b>תעריף לקוח</b>, למשל <span class="n">₪250</span> לקבוצה.</li>
+        <li><b>תעריף מדריך קבוע</b> (לא חובה): משמש רק כשלמדריך אין תעריף משלו.</li>
+        <li><span class="btn c">הוסף מסגרת</span></li>
+      </ol>
+      <div class="note amber"><b>המסגרות מהדמו בלי תעריף.</b> ב<b>צוות ← מסגרות</b> נוגעים ב<span class="btn">הגדרת תעריף</span> ליד כל מסגרת, פעם אחת, ומאז כל פעילות שם מחושבת לבד.</div>
+      <div class="phone sm" style="margin:2mm auto 0"><img src="img/frameworks.png" alt=""></div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">5</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 6. ADD ACTIVITY ═════════ -->
+<section class="page">
+  <div class="eyebrow">הדבר שעושים הכי הרבה</div>
+  <h1>מוסיפים פעילות</h1>
+  <div class="cols" style="margin-top:8mm">
+    <div>
+      <ol class="steps">
+        <li><b>מי המדריך?</b> נגיעה בעיגול. מתחת לכל שם רואים את התעריף שלו, או "חסר תעריף".</li>
+        <li><b>באיזו מסגרת?</b> ליד כל מסגרת רואים את תעריף הלקוח. חסרה מסגרת? מוסיפים בלי לצאת מהפעולה.</li>
+        <li><b>כמה?</b> קבוצות, שעות או ימים, לפי איך שהמסגרת מחייבת. אם למדריך יש תוספת נסיעה, בוחרים כמה נסיעות.</li>
+        <li><b>החישוב.</b> כשכל התעריפים קיימים מופיע <span class="tag ink">✓ התעריף נמצא אוטומטית</span>, וליד כל סכום כתוב מאיפה הגיע:<br>
+          <span class="muted"><span class="n">₪250 × 6</span> · תעריף בית ספר אוסישקין<br><span class="n">₪110 × 6 + ₪50</span> נסיעה · תעריף נועה</span></li>
+        <li><span class="btn">שמור פעילות</span>. רווח החודש מתגלגל לערך החדש מול העיניים.</li>
+      </ol>
+      <div class="note amber"><b>אין תעריף?</b> מופיע <span class="tag amber">חסר תעריף</span> ושדה להזנה ידנית, רק לסכום שחסר. האפליקציה אף פעם לא ממציאה תעריף. אפשר גם לשמור בלי הסכום, והפעילות תסומן "מידע חסר".</div>
+    </div>
+    <div>
+      <div class="phone"><img src="img/activity-review.png" alt=""></div>
+      <div class="cap">החישוב, עם המקור של כל מספר</div>
+    </div>
+  </div>
+  <div class="rule"></div>
+  <div class="cols">
+    <div>
+      <h2>תיקון, שכפול ומחיקה</h2>
+      <p>נגיעה בכל פעילות, ביומן, בכרטיס מדריך או ביום בדופק, פותחת את <b>כרטיס הפעילות</b>:</p>
+      <p><span class="btn c">שוב, היום</span> אותה פעילות בתאריך של היום. &nbsp; <span class="btn o">עריכה</span> לתקן כמות, תאריך, מסגרת או סכום. &nbsp; <b>מחיקה</b>, ואחריה כפתור <span class="btn o">ביטול</span> למקרה של טעות.</p>
+    </div>
+    <div><div class="phone sm" style="margin:0 auto"><img src="img/activity-detail.png" alt=""></div></div>
+  </div>
+  <div class="foot"><span class="n">6</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 7. TEAM + INSTRUCTOR ═════════ -->
+<section class="page">
+  <div class="eyebrow">צוות</div>
+  <h1>מי ברווח,<br>מי צריך בדיקה</h1>
+  <div class="cols wide" style="margin-top:8mm">
+    <div>
+      <h2>המפה והרשימה</h2>
+      <p><b>המפה</b> מסדרת את המדריכים לפי מצב כספי: רווחי, הפסדי, או מידע חסר (כשאי אפשר לחשב רווח). גודל העיגול הוא ההכנסה, ונקודה כתומה פירושה קבלה חסרה.</p>
+      <p><b>הרשימה</b> מתחת: שורה לכל מדריך, עם הכנסה, תשלום ורווח, ומתחת למספרים המצב הכספי והסימונים התפעוליים בנפרד, למשל <span class="tag cobalt">רווחי</span> · <span class="muted">קבלה חסרה · חסר תעריף</span>.</p>
+      <div class="phone sm" style="margin:3mm auto 0"><img src="img/team.png" alt=""></div>
+    </div>
+    <div>
+      <h2>כרטיס מדריך</h2>
+      <p>משפט אחד שאומר מה קרה החודש, הפס של המדריך, הפעילויות, תנאי התשלום ומגמה של שלושה חודשים. מכאן גם <span class="btn c">+ הוסף פעילות</span> ו<span class="btn o">עריכת תנאי תשלום</span>.</p>
+      <h3 style="margin-top:4mm">קבלות ותזכורות</h3>
+      <p>כשחסרה קבלה מופיעה מסגרת ענבר. <span class="btn">צור תזכורת</span> מציג הודעה מוכנה, ו<span class="btn">שליחה בוואטסאפ</span> פותח את הצ׳אט עם המדריך וההודעה כבר כתובה. כשהקבלה מגיעה: <span class="btn o">התקבלה</span>.</p>
+      <div class="phone sm" style="margin:3mm auto 0"><img src="img/instructor.png" alt=""></div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">7</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 8. MONTH ═════════ -->
+<section class="page">
+  <div class="eyebrow">חודש</div>
+  <h1>המערכת בודקת,<br>אתם סוגרים</h1>
+  <div class="cols" style="margin-top:8mm">
+    <div>
+      <p class="lead">במסך חודש האפליקציה עוברת על כל הפעילויות, פס אחרי פס, ומחלקת את מה שמצאה לשלוש קבוצות:</p>
+      <h3 style="margin-top:4mm"><span class="tag loss">חוסם סגירה</span></h3>
+      <p>חסרה הכנסה, חסר תשלום או חסרה מסגרת. בלי זה הרווח לא סופי. כל שורה עם <span class="btn">השלם עכשיו</span>, ואם יש תעריף שמור הסכום כבר ממולא ומחכה לאישור.</p>
+      <h3><span class="tag amber">דורש טיפול</span></h3>
+      <p>קבלות חסרות (עם תזכורת בוואטסאפ) והפסדים אמיתיים לבדיקה (<span class="btn o">ההפסד נכון</span> מסמן שבדקתם). לא חוסם סגירה. אם רוצים שקבלות כן יחסמו, יש מתג לזה.</p>
+      <h3><span class="tag ink">הושלם</span></h3>
+      <p>מה שכבר תקין.</p>
+      <h2 style="margin-top:6mm">הסיכום מתיישב</h2>
+      <p>הכנסות, פחות תשלומים, פחות מה שהוחרג בגלל מידע חסר, שווה הרווח. כשאין חסימות, <span class="btn c">סגירת החודש</span>, וחותמת "נסגר" נוחתת על החודש. אפשר לפתוח מחדש.</p>
+      <h2 style="margin-top:6mm">יומן החודש</h2>
+      <p>בתחתית: כל הפעילויות לפי ימים, עם סינון לפי מדריך. נגיעה בפעילות פותחת את הכרטיס שלה.</p>
+    </div>
+    <div>
+      <div class="phone"><img src="img/month.png" alt=""></div>
+      <div class="cap">בדיקת סוף החודש</div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">8</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 9. DATA: WHERE ═════════ -->
+<section class="page">
+  <div class="eyebrow">שמירת נתונים · חלק א׳</div>
+  <h1>איפה הנתונים<br>שלך נמצאים</h1>
+  <p class="lead" style="margin-top:7mm">כל מה שמוזן נשמר <b>אוטומטית ומיד</b>, בלי כפתור שמירה. הנתונים נשמרים בזיכרון של הדפדפן <b>במכשיר הזה בלבד</b>, בלי שרת ובלי חשבון.</p>
+
+  <div class="cols wide" style="margin-top:6mm">
+    <div class="note paper" style="margin:0">
+      <h3>מה זה אומר בפועל</h3>
+      <ul style="margin:2mm 0 0;padding-inline-start:5mm;font-size:10pt;line-height:1.65">
+        <li>סוגרים וחוזרים: הכל במקום.</li>
+        <li>האייפון והמחשב <b>לא מסונכרנים</b>. כל מכשיר שומר לעצמו.</li>
+        <li>מי שמחזיק את המכשיר רואה את הנתונים, אז כדאי שיהיה לו קוד נעילה.</li>
+        <li>מחיקת נתוני Safari או החלפת מכשיר מוחקות את הנתונים, <b>חוץ מקובץ גיבוי</b>.</li>
+      </ul>
+    </div>
+    <div class="note amber" style="margin:0">
+      <h3>שלושה דברים שמוחקים נתונים</h3>
+      <ol style="margin:2mm 0 0;padding-inline-start:5mm;font-size:10pt;line-height:1.65">
+        <li>שבוע בלי לפתוח, כשהאפליקציה <b>לא</b> במסך הבית (כלל של Safari).</li>
+        <li>הגדרות ← Safari ← <b>ניקוי היסטוריה ונתוני אתרים</b>.</li>
+        <li><b>איפוס לנתוני הדמו</b> מתפריט החודש. הוא מבקש אישור לפני.</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2 style="margin-top:9mm">איך יודעים שהכל בסדר</h2>
+  <p>בתחתית המסך הראשי יש שורה קטנה: <b>"הנתונים נשמרים במכשיר הזה · גיבוי אחרון: לפני X ימים"</b>. נקודה כחולה פירושה שהגיבוי עדכני. נקודה כתומה פירושה שעבר יותר משבוע, וגם יופיע ב"דורש טיפול" <span class="btn">גיבוי עכשיו</span>.</p>
+
+  <div class="note ink" style="margin-top:6mm">
+    <b>הקישור לתצוגה המקדימה (claude.ai):</b> גם שם הנתונים נשמרים, אבל בנפרד, רק בדפדפן שפתח אותו. מה שהוזן בתצוגה המקדימה לא מופיע באפליקציה, ולהפך. להעביר נתונים ביניהן? גיבוי בצד אחד, שחזור בצד השני.
+  </div>
+  <div class="foot"><span class="n">9</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 10. DATA: BACKUP ═════════ -->
+<section class="page">
+  <div class="eyebrow">שמירת נתונים · חלק ב׳</div>
+  <h1>גיבוי ושחזור</h1>
+  <div class="cols" style="margin-top:8mm">
+    <div>
+      <p class="lead">גיבוי הוא קובץ אחד שמכיל את כל הנתונים: מדריכים, מסגרות, פעילויות, קבלות וחודשים שנסגרו. שומרים אותו במקום בטוח, ואפשר להחזיר ממנו הכל, בכל מכשיר.</p>
+      <h2 style="margin-top:5mm">שמירת גיבוי</h2>
+      <ol class="steps">
+        <li>נוגעים ב<b>גיבוי</b> בתחתית המסך הראשי, או בכפתור החודש ← <b>גיבוי ושחזור נתונים</b>.</li>
+        <li><span class="btn c">שמירת קובץ גיבוי</span>. נפתח מסך השיתוף של האייפון.</li>
+        <li>בוחרים <b>שמירה בקבצים</b> (iCloud Drive), או שולחים לעצמכם בוואטסאפ או במייל.</li>
+      </ol>
+      <p class="muted">אין אפשרות לשמור קובץ (למשל בתצוגה המקדימה)? <span class="btn o">העתקת הגיבוי כטקסט</span> ומדביקים בפתקים.</p>
+      <div class="note paper"><b>כמה פעמים?</b> פעם בשבוע, ותמיד <b>אחרי סגירת חודש</b>. שמות הקבצים כוללים תאריך, אז אפשר לשמור כמה ולא לדרוס.</div>
+
+      <h2 style="margin-top:5mm">שחזור</h2>
+      <ol class="steps">
+        <li>פותחים <b>גיבוי ושחזור</b> ובוחרים <b>מקובץ</b> (או <b>מטקסט שהועתק</b>).</li>
+        <li>האפליקציה בודקת את הקובץ ומראה מה יש בו: כמה מדריכים, מסגרות ופעילויות, ומאיזה תאריך.</li>
+        <li><span class="btn c">שחזור הנתונים</span>. השחזור <b>מחליף</b> את כל מה שיש כרגע במכשיר.</li>
+      </ol>
+    </div>
+    <div>
+      <div class="phone"><img src="img/backup.png" alt=""></div>
+      <div class="cap">מסך הגיבוי והשחזור</div>
+      <div class="note amber" style="margin-top:6mm;font-size:9.5pt">
+        <b>עוברים לאייפון חדש:</b> במכשיר הישן שומרים גיבוי. בחדש מוסיפים את האפליקציה למסך הבית, פותחים ומשחזרים מהקובץ.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">10</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+<!-- ═════════ 11. FAQ ═════════ -->
+<section class="page">
+  <div class="eyebrow">שאלות נפוצות</div>
+  <h1>אם משהו<br>לא מסתדר</h1>
+  <div class="cols wide faq" style="margin-top:6mm">
+    <div>
+      <h3>למה הרווח מסומן "לא סופי"?</h3>
+      <p>יש פעילות בלי הכנסה או בלי תשלום. היא מחוץ לחישוב עד שמשלימים. "דורש טיפול" ← השלם עכשיו.</p>
+      <h3>מדריך מופיע בהפסד, אבל אני יודע שזה בסדר</h3>
+      <p>בכרטיס המדריך או בבדיקת החודש: <b>ההפסד נכון</b>. הוא יסומן כנבדק ויפסיק להופיע.</p>
+      <h3>האפליקציה לא מחשבת לבד</h3>
+      <p>חסר תעריף. למדריך: כרטיס המדריך ← עריכת תנאי תשלום. למסגרת: צוות ← מסגרות ← הגדרת תעריף.</p>
+      <h3>הזנתי פעילות בטעות</h3>
+      <p>נוגעים בה ← עריכה, או מחיקה. אחרי מחיקה מופיע "ביטול" לכמה שניות.</p>
+      <h3>תעריף השתנה באמצע החודש</h3>
+      <p>מעדכנים את התעריף. פעילויות שכבר נשמרו לא משתנות, וכל פעילות חדשה מחושבת לפי התעריף החדש.</p>
+    </div>
+    <div>
+      <h3>הנתונים נעלמו</h3>
+      <p>בודקים שפתחתם מאותו מכשיר ומאותו מקום: האייקון במסך הבית, לא Safari, ולא הקישור לתצוגה המקדימה. אם נמחקו, משחזרים מקובץ הגיבוי האחרון.</p>
+      <h3>רוצה לראות חודש קודם</h3>
+      <p>הכפתור עם שם החודש למעלה, בכל מסך.</p>
+      <h3>איך מתחילים מאפס?</h3>
+      <p>תפריט החודש ← איפוס לנתוני הדמו. מומלץ לשמור גיבוי לפני.</p>
+      <h3>אפשר לעבוד מכמה מכשירים?</h3>
+      <p>כרגע כל מכשיר שומר לעצמו. סנכרון אמיתי בין מכשירים יגיע עם חיבור לשרת, בשלב הבא.</p>
+      <div class="note ink" style="margin-top:6mm">
+        <b>שלושה הרגלים שעושים את כל ההבדל</b><br>
+        1. מזינים פעילות באותו יום, עם "שוב, היום".<br>
+        2. סוגרים חודש כשאין חסימות.<br>
+        3. גיבוי אחרי כל סגירת חודש.
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span class="n">11</span><span class="wm">RAZICAST CONTROL</span></div>
+</section>
+
+</body>
+</html>

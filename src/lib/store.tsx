@@ -11,6 +11,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { requestPersistentStorage } from "./backup";
 import { monthOf } from "./calc";
 import { localRepository, type Repository } from "./repository";
 import { createSeed } from "./seed";
@@ -34,6 +35,7 @@ type Action =
   | { type: "updateFramework"; id: ID; patch: Partial<Framework> }
   | { type: "addActivity"; activity: Activity }
   | { type: "updateActivity"; id: ID; patch: Partial<Activity> }
+  | { type: "deleteActivity"; id: ID }
   | { type: "setReceipt"; instructorId: ID; month: MonthKey; status: ReceiptStatus }
   | { type: "remind"; instructorId: ID; month: MonthKey }
   | { type: "ackLoss"; instructorId: ID; month: MonthKey; value: boolean }
@@ -79,6 +81,8 @@ function reducer(data: AppData, action: Action): AppData {
       };
     case "updateActivity":
       return { ...data, activities: data.activities.map((a) => (a.id === action.id ? { ...a, ...action.patch } : a)) };
+    case "deleteActivity":
+      return { ...data, activities: data.activities.filter((a) => a.id !== action.id) };
     case "setReceipt":
       return { ...data, receipts: upsertReceipt(data, action.instructorId, action.month, { status: action.status }) };
     case "remind":
@@ -108,7 +112,19 @@ function reducer(data: AppData, action: Action): AppData {
 /* ───────────────────────── UI state (not persisted) ───────────────────────── */
 
 export type Flow =
-  | { kind: "activity"; instructorId?: ID; frameworkId?: ID }
+  | {
+      kind: "activity";
+      instructorId?: ID;
+      frameworkId?: ID;
+      /** Start from an earlier activity: same people and place, today's date, current rates */
+      repeatOf?: ID;
+      /** Edit an existing activity in place */
+      editId?: ID;
+      /** Pre-set date (yyyy-mm-dd), e.g. from a day in the month pulse */
+      date?: string;
+    }
+  | { kind: "activityDetail"; activityId: ID }
+  | { kind: "backup" }
   | { kind: "instructor"; editId?: ID }
   | { kind: "framework"; editId?: ID }
   | { kind: "resolve"; activityId: ID };
@@ -116,6 +132,7 @@ export type Flow =
 interface Toast {
   id: number;
   message: string;
+  action?: { label: string; run: () => void };
 }
 
 export type NewInstructor = Omit<Instructor, "id" | "createdAt" | "origin">;
@@ -134,6 +151,10 @@ interface StoreValue {
   updateFramework: (id: ID, patch: Partial<Framework>) => void;
   addActivity: (a: NewActivity) => Activity;
   updateActivity: (id: ID, patch: Partial<Activity>) => void;
+  /** Deletes and offers an undo toast */
+  deleteActivity: (id: ID) => void;
+  /** Replaces all data (restore from backup) */
+  importData: (d: AppData) => void;
   setReceipt: (instructorId: ID, month: MonthKey, status: ReceiptStatus) => void;
   markReminded: (instructorId: ID, month: MonthKey) => void;
   ackLoss: (instructorId: ID, month: MonthKey, value?: boolean) => void;
@@ -148,7 +169,12 @@ interface StoreValue {
   setAddMenuOpen: (v: boolean) => void;
 
   toasts: Toast[];
-  notify: (message: string) => void;
+  notify: (message: string, action?: Toast["action"]) => void;
+  dismissToast: (id: number) => void;
+
+  /** The opening sequence has finished — hero animations wait for it */
+  introDone: boolean;
+  setIntroDone: (v: boolean) => void;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -166,6 +192,7 @@ export function StoreProvider({
   const [flow, setFlow] = useState<Flow | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [introDone, setIntroDone] = useState(false);
   const repo = useRef(repository);
 
   // Load once on the client, then save every change.
@@ -173,15 +200,18 @@ export function StoreProvider({
     const saved = repo.current.load();
     if (saved) dispatch({ type: "hydrate", data: saved });
     setHydrated(true);
+    // Ask the browser to keep our data (helps against storage eviction)
+    void requestPersistentStorage();
   }, []);
   useEffect(() => {
     if (hydrated) repo.current.save(data);
   }, [data, hydrated]);
 
-  const notify = useCallback((message: string) => {
+  const dismissToast = useCallback((id: number) => setToasts((t) => t.filter((x) => x.id !== id)), []);
+  const notify = useCallback((message: string, action?: Toast["action"]) => {
     const id = Date.now() + Math.random();
-    setToasts((t) => [...t, { id, message }]);
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600);
+    setToasts((t) => [...t, { id, message, action }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), action ? 5200 : 2600);
   }, []);
 
   const value = useMemo<StoreValue>(
@@ -208,6 +238,13 @@ export function StoreProvider({
         return activity;
       },
       updateActivity: (id, patch) => dispatch({ type: "updateActivity", id, patch }),
+      deleteActivity: (id) => {
+        const removed = data.activities.find((a) => a.id === id);
+        if (!removed) return;
+        dispatch({ type: "deleteActivity", id });
+        notify("הפעילות נמחקה", { label: "ביטול", run: () => dispatch({ type: "addActivity", activity: removed }) });
+      },
+      importData: (d) => dispatch({ type: "hydrate", data: d }),
       setReceipt: (instructorId, m, status) => dispatch({ type: "setReceipt", instructorId, month: m, status }),
       markReminded: (instructorId, m) => dispatch({ type: "remind", instructorId, month: m }),
       ackLoss: (instructorId, m, v = true) => dispatch({ type: "ackLoss", instructorId, month: m, value: v }),
@@ -228,8 +265,11 @@ export function StoreProvider({
       setAddMenuOpen,
       toasts,
       notify,
+      dismissToast,
+      introDone,
+      setIntroDone,
     }),
-    [data, hydrated, month, flow, addMenuOpen, toasts, notify],
+    [data, hydrated, month, flow, addMenuOpen, toasts, notify, dismissToast, introDone],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
