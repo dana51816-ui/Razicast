@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   applicationName: "Razicast Control",
   appleWebApp: { capable: true, title: "Razicast", statusBarStyle: "default" },
   formatDetection: { telephone: false },
+  // Older iOS reads only the Apple tag for full-screen home-screen launch
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 export const viewport: Viewport = {
