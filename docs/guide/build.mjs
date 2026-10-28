@@ -32,7 +32,8 @@ const tap = async (name) => {
   await wait(450);
 };
 
-await p.goto(base, { waitUntil: "networkidle" });
+// The demo data lives in September 2026: pin the app's "today" there (kept for the session)
+await p.goto(`${base}/?today=2026-09-26`, { waitUntil: "networkidle" });
 await p.evaluate(() => {
   localStorage.clear();
   sessionStorage.clear();

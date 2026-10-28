@@ -19,8 +19,24 @@ import { createSeed } from "./seed";
 import type { Activity, AppData, Framework, ID, Instructor, InvoiceStatus, MonthKey, ReceiptStatus, Settings } from "./types";
 
 /** The demo runs "today" inside September 2026, the month the brief describes. */
-export const TODAY = "2026-09-26";
-export const CURRENT_MONTH = monthOf(TODAY);
+/** The demo data's "today". Used for the server render only; the device's real date replaces it on load. */
+export const SEED_TODAY = "2026-09-26";
+
+/** The device's local date (yyyy-mm-dd). `?today=yyyy-mm-dd` pins it for demos and tests. */
+function deviceToday(): string {
+  const valid = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null);
+  try {
+    const pinned = valid(new URLSearchParams(window.location.search).get("today")) ?? valid(sessionStorage.getItem("razicast-today"));
+    if (pinned) {
+      sessionStorage.setItem("razicast-today", pinned);
+      return pinned;
+    }
+  } catch {
+    /* storage blocked: fall through to the clock */
+  }
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 const now = () => new Date().toISOString();
 const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -148,6 +164,9 @@ export type NewActivity = Omit<Activity, "id" | "createdAt" | "origin">;
 interface StoreValue {
   data: AppData;
   hydrated: boolean;
+  /** The device's date, yyyy-mm-dd */
+  today: string;
+  currentMonth: MonthKey;
   month: MonthKey;
   setMonth: (m: MonthKey) => void;
 
@@ -195,7 +214,9 @@ export function StoreProvider({
 }) {
   const [data, dispatch] = useReducer(reducer, undefined, () => applyClientRates(createSeed()));
   const [hydrated, setHydrated] = useState(false);
-  const [month, setMonth] = useState<MonthKey>(CURRENT_MONTH);
+  const [today, setToday] = useState(SEED_TODAY);
+  const currentMonth = monthOf(today);
+  const [month, setMonth] = useState<MonthKey>(monthOf(SEED_TODAY));
   const [flow, setFlow] = useState<Flow | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -206,6 +227,9 @@ export function StoreProvider({
   useEffect(() => {
     const saved = repo.current.load();
     if (saved) dispatch({ type: "hydrate", data: saved });
+    const t = deviceToday();
+    setToday(t);
+    setMonth(monthOf(t));
     setHydrated(true);
     // Ask the browser to keep our data (helps against storage eviction)
     void requestPersistentStorage();
@@ -225,6 +249,8 @@ export function StoreProvider({
     () => ({
       data,
       hydrated,
+      today,
+      currentMonth,
       month,
       setMonth,
       addInstructor: (input) => {
@@ -261,7 +287,7 @@ export function StoreProvider({
       resetDemo: () => {
         repo.current.clear();
         dispatch({ type: "reset" });
-        setMonth(CURRENT_MONTH);
+        setMonth(currentMonth);
       },
       flow,
       openFlow: (f) => {
@@ -277,7 +303,7 @@ export function StoreProvider({
       introDone,
       setIntroDone,
     }),
-    [data, hydrated, month, flow, addMenuOpen, toasts, notify, dismissToast, introDone],
+    [data, hydrated, today, currentMonth, month, flow, addMenuOpen, toasts, notify, dismissToast, introDone],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

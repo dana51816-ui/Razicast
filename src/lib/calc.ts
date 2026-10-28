@@ -326,6 +326,12 @@ export function previousMonthKey(month: MonthKey): MonthKey {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` as MonthKey;
 }
 
+export function nextMonthKey(month: MonthKey): MonthKey {
+  const [y, m] = month.split("-").map(Number);
+  const d = new Date(y, m, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` as MonthKey;
+}
+
 export function lastMonths(month: MonthKey, n: number): MonthKey[] {
   const out: MonthKey[] = [month];
   while (out.length < n) out.unshift(previousMonthKey(out[0]));

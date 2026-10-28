@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
 import { activitiesIn, activityProfit, frameworkOf, instructorOf, totalsOf } from "@/lib/calc";
 import { formatILS, monthName, signedILS } from "@/lib/format";
-import { CURRENT_MONTH, TODAY, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 import { cn } from "../ui/cn";
 
 /**
@@ -12,14 +12,14 @@ import { cn } from "../ui/cn";
  * colour = what the money did (profit / loss / missing). Tap a day to see it.
  */
 export function MonthPulse({ start = true }: { start?: boolean }) {
-  const { data, month, openFlow } = useStore();
+  const { data, month, openFlow, today: todayISO, currentMonth } = useStore();
   const reduce = useReducedMotion();
   const [picked, setPicked] = useState<number | null>(null);
 
   const [y, m] = month.split("-").map(Number);
   const days = new Date(y, m, 0).getDate();
   const acts = activitiesIn(data, month);
-  const today = month === CURRENT_MONTH ? Number(TODAY.slice(8)) : null;
+  const today = month === currentMonth ? Number(todayISO.slice(8)) : null;
 
   const byDay = Array.from({ length: days }, (_, i) => {
     const day = i + 1;

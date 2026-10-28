@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { activitiesIn, totalsOf } from "@/lib/calc";
 import { formatILS, monthLabel } from "@/lib/format";
-import { CURRENT_MONTH, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
 
 const SEEN_KEY = "razicast-intro-seen";
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -16,7 +16,7 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
  * split — then the whole thing lifts away to reveal the app.
  */
 export function Intro() {
-  const { data, hydrated, setIntroDone } = useStore();
+  const { data, hydrated, currentMonth, setIntroDone } = useStore();
   const reduce = useReducedMotion();
   const [show, setShow] = useState<boolean | null>(null);
 
@@ -45,7 +45,7 @@ export function Intro() {
     setIntroDone(true);
   };
 
-  const t = totalsOf(activitiesIn(data, CURRENT_MONTH));
+  const t = totalsOf(activitiesIn(data, currentMonth));
   const hasSplit = t.confirmedRevenue > 0;
   const payShare = hasSplit ? Math.min(1, t.confirmedPayment / t.confirmedRevenue) : 0.5;
   const word = "RAZICAST".split("");
@@ -102,7 +102,7 @@ export function Intro() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.3 }}
               >
-                <span className="bg-stone px-3 text-[14px] leading-6 font-semibold">{monthLabel(CURRENT_MONTH)}</span>
+                <span className="bg-stone px-3 text-[14px] leading-6 font-semibold">{monthLabel(currentMonth)}</span>
               </motion.div>
             </div>
 

@@ -15,7 +15,7 @@ import {
   unitPlural,
 } from "@/lib/calc";
 import { dayMonth, formatILS, monthName } from "@/lib/format";
-import { TODAY, useStore, type Flow } from "@/lib/store";
+import { useStore, type Flow } from "@/lib/store";
 import type { Amount } from "@/lib/types";
 import { IconCheck, IconNext } from "../shell/icons";
 import { RollTo } from "../ui/RollingNumber";
@@ -32,7 +32,7 @@ const ORDER: Step[] = ["who", "where", "qty", "review"];
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
 
 export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind: "activity" }>; onClose: () => void }) {
-  const { data, addActivity, updateActivity } = useStore();
+  const { data, addActivity, updateActivity, today } = useStore();
   const router = useRouter();
 
   // Repeat or edit start from an existing activity
@@ -46,7 +46,7 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
   const [step, setStep] = useState<Step>(source ? "review" : instructorId ? (frameworkId ? "qty" : "where") : "who");
   const [quantity, setQuantity] = useState(source?.quantity ?? 1);
   const [travelUnits, setTravelUnits] = useState<number | null>(source ? source.travelUnits : null);
-  const [date, setDate] = useState(editing ? source!.date : preset.date ?? TODAY);
+  const [date, setDate] = useState(editing ? source!.date : preset.date ?? today);
   // A manual amount from before is offered again (it was the user's own number), never a guessed one
   const [revManual, setRevManual] = useState(manualOf(source?.revenue));
   const [payManual, setPayManual] = useState(manualOf(source?.instructorPayment));

@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { auditMonth } from "@/lib/audit";
-import { activitiesIn, isClosed, teamMonth, totalsOf } from "@/lib/calc";
+import { activitiesIn, isClosed, nextMonthKey, teamMonth, totalsOf } from "@/lib/calc";
 import { formatILS, monthName } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { IconCheck, IconLock } from "../shell/icons";
@@ -220,7 +220,7 @@ export function MonthScreen() {
               type="button"
               onClick={() => {
                 store.closeMonth(month, true);
-                store.notify(`${mName} נסגר`);
+                store.notify(`${mName} נסגר. מומלץ לשמור עכשיו גיבוי`, { label: "גיבוי", run: () => store.openFlow({ kind: "backup" }) });
               }}
               className="mt-4 w-full h-[58px] rounded-2xl bg-cobalt text-white text-[17px] font-bold"
             >
@@ -231,6 +231,33 @@ export function MonthScreen() {
               <div className="w-full h-[58px] rounded-2xl border-[1.5px] border-ink-soft text-ink-3 text-[15px] font-bold flex items-center justify-center gap-2">
                 <IconLock className="size-[18px]" />
                 {acts.length === 0 ? "אין פעילויות לסגירה" : `קודם ${audit.blockers.length === 1 ? "חוסם אחד" : `${audit.blockers.length} חוסמים`}, ואז סגירה`}
+              </div>
+            </div>
+          )}
+
+          {/* After closing: keep a copy off the device, and point to the month that's already open */}
+          {closed && (
+            <div className="mt-4 pt-4 border-t border-ink-soft">
+              <p className="text-[13.5px] leading-relaxed text-ink-3">
+                <b className="text-white">החודש נשמר במכשיר.</b> כדי שיהיה עותק גם מחוץ לאייפון, שומרים עכשיו קובץ גיבוי.
+                {" "}
+                {monthName(nextMonthKey(month))} נפתח לבד: כל פעילות עם תאריך של {monthName(nextMonthKey(month))} נכנסת אליו.
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => store.openFlow({ kind: "backup" })}
+                  className="h-12 rounded-xl bg-white text-ink text-[14.5px] font-bold"
+                >
+                  שמירת קובץ גיבוי
+                </button>
+                <button
+                  type="button"
+                  onClick={() => store.setMonth(nextMonthKey(month))}
+                  className="h-12 rounded-xl border-[1.5px] border-ink-soft text-white text-[14.5px] font-bold"
+                >
+                  מעבר ל{monthName(nextMonthKey(month))}
+                </button>
               </div>
             </div>
           )}
