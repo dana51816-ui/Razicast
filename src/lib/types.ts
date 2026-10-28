@@ -12,7 +12,7 @@ export type ID = string;
 export type Origin = "brief" | "sample" | "user";
 
 /** How money is counted, for both instructors and frameworks. */
-export type RateModel = "perGroup" | "perHour" | "perDay" | "fixed" | "custom";
+export type RateModel = "perGroup" | "perHour" | "perDay" | "perPerson" | "fixed" | "custom";
 
 export interface Instructor {
   id: ID;
@@ -101,6 +101,8 @@ export interface Settings {
   receiptsBlockClosing: boolean;
   /** When the last backup file was made on this device */
   lastBackupAt?: string | null;
+  /** Which bundled client-rate list has already been applied */
+  ratesImported?: string;
 }
 
 export interface AppData {

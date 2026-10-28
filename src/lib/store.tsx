@@ -14,6 +14,7 @@ import {
 import { requestPersistentStorage } from "./backup";
 import { monthOf } from "./calc";
 import { localRepository, type Repository } from "./repository";
+import { applyClientRates } from "./clientRates";
 import { createSeed } from "./seed";
 import type { Activity, AppData, Framework, ID, Instructor, MonthKey, ReceiptStatus, Settings } from "./types";
 
@@ -62,9 +63,9 @@ function upsertReceipt(data: AppData, instructorId: ID, month: MonthKey, patch: 
 function reducer(data: AppData, action: Action): AppData {
   switch (action.type) {
     case "hydrate":
-      return action.data;
+      return applyClientRates(action.data);
     case "reset":
-      return createSeed();
+      return applyClientRates(createSeed());
     case "addInstructor":
       return { ...data, instructors: [...data.instructors, action.instructor] };
     case "updateInstructor":
@@ -186,7 +187,7 @@ export function StoreProvider({
   children: ReactNode;
   repository?: Repository;
 }) {
-  const [data, dispatch] = useReducer(reducer, undefined, createSeed);
+  const [data, dispatch] = useReducer(reducer, undefined, () => applyClientRates(createSeed()));
   const [hydrated, setHydrated] = useState(false);
   const [month, setMonth] = useState<MonthKey>(CURRENT_MONTH);
   const [flow, setFlow] = useState<Flow | null>(null);

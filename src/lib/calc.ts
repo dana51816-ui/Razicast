@@ -17,11 +17,12 @@ export const RATE_MODELS: Record<RateModel, { label: string; per: string; plural
   perGroup: { label: "לפי קבוצה", per: "לקבוצה", plural: "קבוצות", one: "קבוצה" },
   perHour: { label: "לפי שעה", per: "לשעה", plural: "שעות", one: "שעה" },
   perDay: { label: "לפי יום", per: "ליום", plural: "ימים", one: "יום" },
+  perPerson: { label: "לפי משתתף", per: "למשתתף", plural: "משתתפים", one: "משתתף" },
   fixed: { label: "סכום קבוע", per: "לפעילות", plural: "פעילויות", one: "פעילות", hint: "לכל פעילות, לא לפי שעות או קבוצות" },
   custom: { label: "אחר", per: "לפי הסכם", plural: "יחידות", one: "פעילות", hint: "מזינים סכום בכל פעילות" },
 };
 
-export const RATE_MODEL_ORDER: RateModel[] = ["perGroup", "perHour", "perDay", "fixed", "custom"];
+export const RATE_MODEL_ORDER: RateModel[] = ["perGroup", "perHour", "perDay", "perPerson", "fixed", "custom"];
 
 export const FRAMEWORK_TYPES = {
   wonderKids: "ילדי הפלא",
