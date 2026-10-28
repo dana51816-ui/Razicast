@@ -89,6 +89,16 @@ export interface ReceiptRecord {
   updatedAt: string;
 }
 
+/** Client invoicing for one framework in one month. No record = invoice not sent yet. */
+export type InvoiceStatus = "notSent" | "sent" | "paid";
+
+export interface InvoiceRecord {
+  frameworkId: ID;
+  month: MonthKey;
+  status: InvoiceStatus;
+  updatedAt: string;
+}
+
 export interface MonthRecord {
   key: MonthKey;
   closedAt: string | null;
@@ -111,6 +121,8 @@ export interface AppData {
   frameworks: Framework[];
   activities: Activity[];
   receipts: ReceiptRecord[];
+  /** Added after V3 shipped; older saved data and backups don't have it */
+  invoices?: InvoiceRecord[];
   months: MonthRecord[];
   settings: Settings;
 }

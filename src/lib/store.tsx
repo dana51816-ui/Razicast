@@ -16,7 +16,7 @@ import { monthOf } from "./calc";
 import { localRepository, type Repository } from "./repository";
 import { applyClientRates } from "./clientRates";
 import { createSeed } from "./seed";
-import type { Activity, AppData, Framework, ID, Instructor, MonthKey, ReceiptStatus, Settings } from "./types";
+import type { Activity, AppData, Framework, ID, Instructor, InvoiceStatus, MonthKey, ReceiptStatus, Settings } from "./types";
 
 /** The demo runs "today" inside September 2026, the month the brief describes. */
 export const TODAY = "2026-09-26";
@@ -38,6 +38,7 @@ type Action =
   | { type: "updateActivity"; id: ID; patch: Partial<Activity> }
   | { type: "deleteActivity"; id: ID }
   | { type: "setReceipt"; instructorId: ID; month: MonthKey; status: ReceiptStatus }
+  | { type: "setInvoice"; frameworkId: ID; month: MonthKey; status: InvoiceStatus }
   | { type: "remind"; instructorId: ID; month: MonthKey }
   | { type: "ackLoss"; instructorId: ID; month: MonthKey; value: boolean }
   | { type: "closeMonth"; month: MonthKey; value: boolean }
@@ -86,6 +87,10 @@ function reducer(data: AppData, action: Action): AppData {
       return { ...data, activities: data.activities.filter((a) => a.id !== action.id) };
     case "setReceipt":
       return { ...data, receipts: upsertReceipt(data, action.instructorId, action.month, { status: action.status }) };
+    case "setInvoice": {
+      const rest = (data.invoices ?? []).filter((r) => !(r.frameworkId === action.frameworkId && r.month === action.month));
+      return { ...data, invoices: [...rest, { frameworkId: action.frameworkId, month: action.month, status: action.status, updatedAt: now() }] };
+    }
     case "remind":
       return { ...data, receipts: upsertReceipt(data, action.instructorId, action.month, { remindedAt: now() }) };
     case "ackLoss": {
@@ -157,6 +162,7 @@ interface StoreValue {
   /** Replaces all data (restore from backup) */
   importData: (d: AppData) => void;
   setReceipt: (instructorId: ID, month: MonthKey, status: ReceiptStatus) => void;
+  setInvoice: (frameworkId: ID, month: MonthKey, status: InvoiceStatus) => void;
   markReminded: (instructorId: ID, month: MonthKey) => void;
   ackLoss: (instructorId: ID, month: MonthKey, value?: boolean) => void;
   closeMonth: (month: MonthKey, value?: boolean) => void;
@@ -247,6 +253,7 @@ export function StoreProvider({
       },
       importData: (d) => dispatch({ type: "hydrate", data: d }),
       setReceipt: (instructorId, m, status) => dispatch({ type: "setReceipt", instructorId, month: m, status }),
+      setInvoice: (frameworkId, m, status) => dispatch({ type: "setInvoice", frameworkId, month: m, status }),
       markReminded: (instructorId, m) => dispatch({ type: "remind", instructorId, month: m }),
       ackLoss: (instructorId, m, v = true) => dispatch({ type: "ackLoss", instructorId, month: m, value: v }),
       closeMonth: (m, v = true) => dispatch({ type: "closeMonth", month: m, value: v }),

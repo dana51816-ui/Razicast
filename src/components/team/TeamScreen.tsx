@@ -6,6 +6,7 @@ import { useState } from "react";
 import { activitiesIn, FINANCIAL_LABEL, FRAMEWORK_TYPES, rateLine, teamMonth, totalsOf, type InstructorMonth } from "@/lib/calc";
 import { formatILS, monthLabel, signedILS } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import type { InvoiceStatus, MonthKey } from "@/lib/types";
 import { MonthPicker } from "../shell/MonthPicker";
 import { cn } from "../ui/cn";
 import { Dot } from "../ui/Tags";
@@ -157,8 +158,9 @@ export function TeamScreen() {
 
 /** Frameworks and what each one pays — set a rate once, every activity there is calculated. */
 function FrameworksView() {
-  const { data, month, openFlow } = useStore();
+  const { data, month, openFlow, setInvoice } = useStore();
   const acts = activitiesIn(data, month);
+  const invoiceOf = (id: string): InvoiceStatus => data.invoices?.find((r) => r.frameworkId === id && r.month === month)?.status ?? "notSent";
   const list = [...data.frameworks].sort((a, b) => {
     const ca = acts.filter((x) => x.frameworkId === a.id).length;
     const cb = acts.filter((x) => x.frameworkId === b.id).length;
@@ -168,6 +170,7 @@ function FrameworksView() {
 
   return (
     <section aria-label="מסגרות" className="mt-6 max-w-[640px]">
+      <InvoiceSummary statuses={list.map((f) => invoiceOf(f.id))} month={month} />
       {withoutRate > 0 && (
         <p className="mb-3 rounded-[18px] missing-line bg-amber-wash px-4 py-3 text-[13.5px] leading-relaxed">
           ל־<span className="num font-bold">{withoutRate}</span> מסגרות אין תעריף לקוח. בלי תעריף, כל פעילות שם תצטרך הזנת הכנסה ידנית. מגדירים פעם אחת, וכל פעילות מחושבת לבד.
@@ -182,28 +185,31 @@ function FrameworksView() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: Math.min(i, 12) * 0.03 }}
-            className="flex items-center gap-3 min-h-[68px] py-2 border-b border-rule"
+            className="py-3 border-b border-rule"
           >
-            <span className="flex-1 min-w-0">
-              <span className="block text-[16px] font-bold truncate">{f.name}</span>
-              <span className="block text-[12.5px] text-ink-2">
-                {FRAMEWORK_TYPES[f.type]} · <span className="num">{count}</span> פעילויות ב{monthLabel(month).split(" ")[0]}
+            <div className="flex items-center gap-3 min-h-[52px]">
+              <span className="flex-1 min-w-0">
+                <span className="block text-[16px] font-bold truncate">{f.name}</span>
+                <span className="block text-[12.5px] text-ink-2">
+                  {FRAMEWORK_TYPES[f.type]} · <span className="num">{count}</span> פעילויות ב{monthLabel(month).split(" ")[0]}
+                </span>
               </span>
-            </span>
-            {rate ? (
-              <button type="button" onClick={() => openFlow({ kind: "framework", editId: f.id })} className="text-end">
-                <span className="num block text-[15px] font-bold">{rate}</span>
-                <span className="block text-[12px] text-ink-2 underline underline-offset-4">עריכה</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => openFlow({ kind: "framework", editId: f.id })}
-                className="h-10 px-3.5 rounded-xl bg-ink text-white text-[13.5px] font-bold whitespace-nowrap"
-              >
-                הגדרת תעריף
-              </button>
-            )}
+              {rate ? (
+                <button type="button" onClick={() => openFlow({ kind: "framework", editId: f.id })} className="text-end">
+                  <span className="num block text-[15px] font-bold">{rate}</span>
+                  <span className="block text-[12px] text-ink-2 underline underline-offset-4">עריכה</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openFlow({ kind: "framework", editId: f.id })}
+                  className="h-10 px-3.5 rounded-xl bg-ink text-white text-[13.5px] font-bold whitespace-nowrap"
+                >
+                  הגדרת תעריף
+                </button>
+              )}
+            </div>
+            <InvoicePicker name={f.name} value={invoiceOf(f.id)} onChange={(st) => setInvoice(f.id, month, st)} />
           </motion.div>
         );
       })}
@@ -215,6 +221,59 @@ function FrameworksView() {
         + מסגרת חדשה
       </button>
     </section>
+  );
+}
+
+const INVOICE: Record<InvoiceStatus, { label: string; on: string }> = {
+  notSent: { label: "לא נשלחה", on: "bg-white text-ink shadow-sm" },
+  sent: { label: "נשלחה חשבונית", on: "bg-ink text-white" },
+  paid: { label: "נכנס תשלום", on: "bg-cobalt text-white" },
+};
+const INVOICE_ORDER: InvoiceStatus[] = ["notSent", "sent", "paid"];
+
+/** Where this client's invoice stands this month. */
+function InvoicePicker({ name, value, onChange }: { name: string; value: InvoiceStatus; onChange: (s: InvoiceStatus) => void }) {
+  return (
+    <div role="radiogroup" aria-label={`חשבונית ${name}`} className="mt-2 grid grid-cols-3 gap-1 rounded-[14px] bg-stone-2 p-1">
+      {INVOICE_ORDER.map((st) => {
+        const on = value === st;
+        return (
+          <button
+            key={st}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            onClick={() => onChange(st)}
+            className={cn(
+              "relative h-9 rounded-[10px] text-[13px] font-bold transition-colors",
+              on ? INVOICE[st].on : "text-ink-2",
+            )}
+          >
+            {st === "paid" && on && <span aria-hidden>✓ </span>}
+            {INVOICE[st].label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** One line: how many clients are at each invoice stage this month. */
+function InvoiceSummary({ statuses, month }: { statuses: InvoiceStatus[]; month: MonthKey }) {
+  const n = (st: InvoiceStatus) => statuses.filter((x) => x === st).length;
+  return (
+    <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[14px]">
+      <span className="font-bold">חשבוניות {monthLabel(month).split(" ")[0]}</span>
+      <span className="text-cobalt font-bold">
+        <span className="num">{n("paid")}</span> שולמו
+      </span>
+      <span>
+        <span className="num font-bold">{n("sent")}</span> נשלחו, מחכות לתשלום
+      </span>
+      <span className="text-ink-2">
+        <span className="num font-bold">{n("notSent")}</span> לא נשלחו
+      </span>
+    </div>
   );
 }
 
