@@ -16,6 +16,7 @@ import { monthOf } from "./calc";
 import { localRepository, type Repository } from "./repository";
 import { applyClientRates } from "./clientRates";
 import { removeDemo } from "./cleanup";
+import { applyTeam, TEAM_IMPORT_ID } from "./team";
 import { createEmpty, createSeed } from "./seed";
 import type { Activity, AppData, Framework, ID, Instructor, InvoiceStatus, MonthKey, ReceiptStatus, Settings } from "./types";
 
@@ -34,7 +35,7 @@ function demoPinned(): boolean {
 }
 /** Where an empty device starts: clean, or the demo when pinned. */
 function startData(): AppData {
-  return demoPinned() ? { ...createSeed(), settings: { ...createSeed().settings, demoRemoved: true } } : createEmpty();
+  return demoPinned() ? { ...createSeed(), settings: { ...createSeed().settings, demoRemoved: true, teamImported: TEAM_IMPORT_ID } } : createEmpty();
 }
 
 /** The device's local date (yyyy-mm-dd). `?today=yyyy-mm-dd` pins it for demos and tests. */
@@ -94,7 +95,7 @@ function upsertReceipt(data: AppData, instructorId: ID, month: MonthKey, patch: 
 function reducer(data: AppData, action: Action): AppData {
   switch (action.type) {
     case "hydrate":
-      return applyClientRates(removeDemo(action.data));
+      return applyTeam(applyClientRates(removeDemo(action.data)));
     case "addInstructor":
       return { ...data, instructors: [...data.instructors, action.instructor] };
     case "updateInstructor":
@@ -225,7 +226,7 @@ export function StoreProvider({
   children: ReactNode;
   repository?: Repository;
 }) {
-  const [data, dispatch] = useReducer(reducer, undefined, () => applyClientRates(createEmpty()));
+  const [data, dispatch] = useReducer(reducer, undefined, () => applyTeam(applyClientRates(createEmpty())));
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState(SEED_TODAY);
   const currentMonth = monthOf(today);

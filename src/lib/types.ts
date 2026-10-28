@@ -115,6 +115,8 @@ export interface Settings {
   ratesImported?: string;
   /** The demo data was removed (or never added) */
   demoRemoved?: boolean;
+  /** Which bundled team list has already been applied */
+  teamImported?: string;
 }
 
 export interface AppData {
