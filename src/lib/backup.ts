@@ -29,7 +29,7 @@ export function parseBackup(text: string): { ok: true; data: AppData; exportedAt
   try {
     parsed = JSON.parse(text.trim());
   } catch {
-    return { ok: false, error: "זה לא קובץ גיבוי של RAZICAST. ודאו שהעתקתם את כל הטקסט." };
+    return { ok: false, error: "זה לא קובץ גיבוי של RaziCast. ודאו שהעתקתם את כל הטקסט." };
   }
   const f = parsed as Partial<BackupFile>;
   const data = (f && f.kind === MARK ? f.data : (parsed as AppData)) as AppData | undefined;
@@ -59,7 +59,7 @@ export async function shareBackup(data: AppData): Promise<"shared" | "downloaded
     const file = new File([json], name, { type: "application/json" });
     const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
     if (nav.canShare?.({ files: [file] })) {
-      await nav.share({ files: [file], title: "גיבוי RAZICAST CONTROL" });
+      await nav.share({ files: [file], title: "גיבוי RaziCast Control" });
       return "shared";
     }
   } catch (e) {

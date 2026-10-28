@@ -38,9 +38,9 @@ const html = `<title>Razicast Control</title>
 <meta name="theme-color" content="#efefec">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Karantina:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=Karantina:wght@400;700&family=Poppins:wght@600&display=swap">
 <style>
-:root{color-scheme:light;--font-plex:"IBM Plex Sans Hebrew";--font-karantina:"Karantina"}
+:root{color-scheme:light;--font-plex:"IBM Plex Sans Hebrew";--font-karantina:"Karantina";--font-poppins:"Poppins"}
 html,body{background:#efefec;color:#0d0e10}
 </style>
 <style>${css.css}</style>

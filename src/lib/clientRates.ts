@@ -56,7 +56,7 @@ const norm = (s: string) =>
     .toLowerCase();
 
 /** "אוסישקין" matches "בית ספר אוסישקין"; short names must match exactly. */
-function sameClient(a: string, b: string) {
+export function sameClient(a: string, b: string) {
   const x = norm(a);
   const y = norm(b);
   if (x === y) return true;

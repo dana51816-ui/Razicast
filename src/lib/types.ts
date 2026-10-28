@@ -113,6 +113,8 @@ export interface Settings {
   lastBackupAt?: string | null;
   /** Which bundled client-rate list has already been applied */
   ratesImported?: string;
+  /** The demo data was removed (or never added) */
+  demoRemoved?: boolean;
 }
 
 export interface AppData {

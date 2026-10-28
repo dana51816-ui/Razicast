@@ -15,12 +15,27 @@ import { requestPersistentStorage } from "./backup";
 import { monthOf } from "./calc";
 import { localRepository, type Repository } from "./repository";
 import { applyClientRates } from "./clientRates";
-import { createSeed } from "./seed";
+import { removeDemo } from "./cleanup";
+import { createEmpty, createSeed } from "./seed";
 import type { Activity, AppData, Framework, ID, Instructor, InvoiceStatus, MonthKey, ReceiptStatus, Settings } from "./types";
 
 /** The demo runs "today" inside September 2026, the month the brief describes. */
 /** The demo data's "today". Used for the server render only; the device's real date replaces it on load. */
 export const SEED_TODAY = "2026-09-26";
+
+/** `?demo=1` starts from the demo data (tests, the guide's screenshots). Kept for the session. */
+function demoPinned(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).get("demo") === "1") sessionStorage.setItem("razicast-demo", "1");
+    return sessionStorage.getItem("razicast-demo") === "1";
+  } catch {
+    return false;
+  }
+}
+/** Where an empty device starts: clean, or the demo when pinned. */
+function startData(): AppData {
+  return demoPinned() ? { ...createSeed(), settings: { ...createSeed().settings, demoRemoved: true } } : createEmpty();
+}
 
 /** The device's local date (yyyy-mm-dd). `?today=yyyy-mm-dd` pins it for demos and tests. */
 function deviceToday(): string {
@@ -45,7 +60,6 @@ const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}${Math.ra
 
 type Action =
   | { type: "hydrate"; data: AppData }
-  | { type: "reset" }
   | { type: "addInstructor"; instructor: Instructor }
   | { type: "updateInstructor"; id: ID; patch: Partial<Instructor> }
   | { type: "addFramework"; framework: Framework }
@@ -80,9 +94,7 @@ function upsertReceipt(data: AppData, instructorId: ID, month: MonthKey, patch: 
 function reducer(data: AppData, action: Action): AppData {
   switch (action.type) {
     case "hydrate":
-      return applyClientRates(action.data);
-    case "reset":
-      return applyClientRates(createSeed());
+      return applyClientRates(removeDemo(action.data));
     case "addInstructor":
       return { ...data, instructors: [...data.instructors, action.instructor] };
     case "updateInstructor":
@@ -186,7 +198,8 @@ interface StoreValue {
   ackLoss: (instructorId: ID, month: MonthKey, value?: boolean) => void;
   closeMonth: (month: MonthKey, value?: boolean) => void;
   setSettings: (patch: Partial<Settings>) => void;
-  resetDemo: () => void;
+  /** Erase this device's data and start clean (or from the demo when pinned) */
+  resetData: () => void;
 
   flow: Flow | null;
   openFlow: (f: Flow) => void;
@@ -212,7 +225,7 @@ export function StoreProvider({
   children: ReactNode;
   repository?: Repository;
 }) {
-  const [data, dispatch] = useReducer(reducer, undefined, () => applyClientRates(createSeed()));
+  const [data, dispatch] = useReducer(reducer, undefined, () => applyClientRates(createEmpty()));
   const [hydrated, setHydrated] = useState(false);
   const [today, setToday] = useState(SEED_TODAY);
   const currentMonth = monthOf(today);
@@ -226,7 +239,7 @@ export function StoreProvider({
   // Load once on the client, then save every change.
   useEffect(() => {
     const saved = repo.current.load();
-    if (saved) dispatch({ type: "hydrate", data: saved });
+    dispatch({ type: "hydrate", data: saved ?? startData() });
     const t = deviceToday();
     setToday(t);
     setMonth(monthOf(t));
@@ -284,9 +297,9 @@ export function StoreProvider({
       ackLoss: (instructorId, m, v = true) => dispatch({ type: "ackLoss", instructorId, month: m, value: v }),
       closeMonth: (m, v = true) => dispatch({ type: "closeMonth", month: m, value: v }),
       setSettings: (patch) => dispatch({ type: "settings", patch }),
-      resetDemo: () => {
+      resetData: () => {
         repo.current.clear();
-        dispatch({ type: "reset" });
+        dispatch({ type: "hydrate", data: startData() });
         setMonth(currentMonth);
       },
       flow,

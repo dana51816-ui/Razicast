@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Hebrew, Karantina } from "next/font/google";
+import { IBM_Plex_Sans_Hebrew, Karantina, Poppins } from "next/font/google";
 import { AppShell } from "@/components/shell/AppShell";
 import { StoreProvider } from "@/lib/store";
 import "./globals.css";
@@ -17,11 +17,18 @@ const karantina = Karantina({
   display: "swap",
 });
 
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["600"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "RAZICAST CONTROL",
+  title: "RaziCast Control",
   description: "תמונת מצב עסקית בזמן אמת",
-  applicationName: "Razicast Control",
-  appleWebApp: { capable: true, title: "Razicast", statusBarStyle: "default" },
+  applicationName: "RaziCast Control",
+  appleWebApp: { capable: true, title: "RaziCast", statusBarStyle: "default" },
   formatDetection: { telephone: false },
   // Older iOS reads only the Apple tag for full-screen home-screen launch
   other: { "apple-mobile-web-app-capable": "yes" },
@@ -36,7 +43,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl" className={`${plex.variable} ${karantina.variable}`}>
+    <html lang="he" dir="rtl" className={`${plex.variable} ${karantina.variable} ${poppins.variable}`}>
       <body>
         <StoreProvider>
           <AppShell>{children}</AppShell>

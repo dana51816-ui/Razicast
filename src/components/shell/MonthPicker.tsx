@@ -9,7 +9,7 @@ import { cn } from "../ui/cn";
 import { IconCheck, IconChevronDown } from "./icons";
 
 export function MonthPicker({ className }: { className?: string }) {
-  const { data, month, setMonth, resetDemo, notify, openFlow } = useStore();
+  const { data, month, setMonth, resetData, notify, openFlow } = useStore();
   const [open, setOpen] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -91,18 +91,18 @@ export function MonthPicker({ className }: { className?: string }) {
               </button>
               {confirmReset ? (
                 <div className="p-2">
-                  <p className="text-[13px] text-ink-2 leading-snug">כל מה שהוזן במכשיר הזה יימחק ונתוני הדמו יחזרו. להמשיך?</p>
+                  <p className="text-[13px] text-ink-2 leading-snug">כל מה שהוזן במכשיר הזה יימחק, ויישארו רק הלקוחות מהגיליון. כדאי לשמור קודם גיבוי. להמשיך?</p>
                   <div className="flex gap-2 mt-2">
                     <button
                       type="button"
                       onClick={() => {
-                        resetDemo();
+                        resetData();
                         setOpen(false);
-                        notify("נתוני הדמו שוחזרו");
+                        notify("הנתונים נמחקו");
                       }}
                       className="flex-1 h-10 rounded-xl bg-ink text-white text-[14px] font-bold"
                     >
-                      איפוס
+                      מחיקה
                     </button>
                     <button type="button" onClick={() => setConfirmReset(false)} className="flex-1 h-10 rounded-xl bg-stone text-[14px] font-semibold">
                       ביטול
@@ -115,7 +115,7 @@ export function MonthPicker({ className }: { className?: string }) {
                   onClick={() => setConfirmReset(true)}
                   className="w-full h-10 px-3 rounded-xl text-start text-[13px] font-semibold text-ink-2 hover:bg-stone"
                 >
-                  איפוס לנתוני הדמו
+                  מחיקת כל הנתונים
                 </button>
               )}
             </div>

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { activitiesIn, totalsOf } from "@/lib/calc";
 import { formatILS, monthLabel } from "@/lib/format";
 import { useStore } from "@/lib/store";
+import { Logo } from "./Brand";
 
 const SEEN_KEY = "razicast-intro-seen";
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -48,7 +49,6 @@ export function Intro() {
   const t = totalsOf(activitiesIn(data, currentMonth));
   const hasSplit = t.confirmedRevenue > 0;
   const payShare = hasSplit ? Math.min(1, t.confirmedPayment / t.confirmedRevenue) : 0.5;
-  const word = "RAZICAST".split("");
 
   return (
     <AnimatePresence>
@@ -61,21 +61,9 @@ export function Intro() {
           exit={{ y: "-100%", transition: { duration: 0.75, ease: [0.7, 0, 0.2, 1] } }}
         >
           <div className="w-full max-w-[420px]" dir="rtl">
-            {/* Wordmark rises letter by letter */}
-            <div dir="ltr" className="flex items-baseline justify-center gap-2 mb-10 overflow-hidden">
-              <span className="flex">
-                {word.map((ch, i) => (
-                  <motion.span
-                    key={i}
-                    className="display text-[64px] leading-[0.9] tracking-[0.02em]"
-                    initial={{ y: "110%" }}
-                    animate={{ y: 0 }}
-                    transition={{ delay: 0.9 + i * 0.045, duration: 0.6, ease: EASE }}
-                  >
-                    {ch}
-                  </motion.span>
-                ))}
-              </span>
+            {/* The logo rises letter by letter, then the red dot drops onto the i */}
+            <div className="flex justify-center mb-10">
+              <Logo animate delay={0.9} className="text-[58px]" />
             </div>
 
             {/* The measuring line */}

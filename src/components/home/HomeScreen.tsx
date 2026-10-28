@@ -5,6 +5,7 @@ import Link from "next/link";
 import { homeIssues } from "@/lib/audit";
 import { activitiesIn, isClosed, previousMonthKey, totalsOf } from "@/lib/calc";
 import { formatILS, monthLabel, monthName, monthShort } from "@/lib/format";
+import { hasDemo } from "@/lib/cleanup";
 import { useStore } from "@/lib/store";
 import { Wordmark } from "../shell/Brand";
 import { IconCheck, IconFramework, IconNext, IconPersonAdd, IconPlus } from "../shell/icons";
@@ -69,7 +70,7 @@ export function HomeScreen() {
               ) : incomplete ? (
                 <span className="text-[12px] font-semibold text-amber-ink rounded-full px-2.5 py-0.5 missing-line">רווח לא סופי</span>
               ) : null}
-              <DemoTag className="lg:hidden" />
+              {hasDemo(data) && <DemoTag className="lg:hidden" />}
             </div>
           </Reveal>
 

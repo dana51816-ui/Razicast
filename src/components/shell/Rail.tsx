@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { hasDemo } from "@/lib/cleanup";
 import { useStore } from "@/lib/store";
 import { cn } from "../ui/cn";
 import { DemoTag } from "../ui/Tags";
@@ -14,7 +15,7 @@ const ICONS = { "/": IconHome, "/team": IconTeam, "/month": IconMonth } as const
 /** Desktop navigation: the same three places and the same add, as a side rail. */
 export function Rail() {
   const pathname = usePathname();
-  const { setAddMenuOpen, openFlow } = useStore();
+  const { data, setAddMenuOpen, openFlow } = useStore();
   const active = activeHref(pathname);
   return (
     <aside className="hidden lg:flex fixed inset-y-0 start-0 z-40 w-[232px] flex-col px-4 py-8 border-e border-rule">
@@ -59,7 +60,7 @@ export function Rail() {
         >
           גיבוי ושחזור
         </button>
-        <DemoTag />
+        {hasDemo(data) && <DemoTag />}
       </div>
     </aside>
   );

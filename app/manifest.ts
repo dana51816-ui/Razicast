@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "RAZICAST CONTROL",
-    short_name: "Razicast",
+    name: "RaziCast Control",
+    short_name: "RaziCast",
     description: "תמונת מצב עסקית בזמן אמת",
     start_url: "/",
     display: "standalone",

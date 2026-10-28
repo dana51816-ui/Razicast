@@ -4,7 +4,7 @@
 //
 // Usage: node docs/guide/build.mjs <fonts-dir> <out.pdf> [base-url]
 //   <fonts-dir> holds IBM Plex Sans Hebrew (400/500/600/700) and Karantina (700) woff2 files from @fontsource:
-//   plex-{400,500,600,700}.woff2 + plex-latin-{400,500,600,700}.woff2 (hebrew / latin subsets), karantina-700.woff2 + karantina-latin-700.woff2
+//   plex-{400,500,600,700}.woff2 + plex-latin-{400,500,600,700}.woff2 (hebrew / latin subsets), karantina-700.woff2 + karantina-latin-700.woff2, poppins-600.woff2 (@fontsource/poppins, the logo)
 import { execSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -33,7 +33,7 @@ const tap = async (name) => {
 };
 
 // The demo data lives in September 2026: pin the app's "today" there (kept for the session)
-await p.goto(`${base}/?today=2026-09-26`, { waitUntil: "networkidle" });
+await p.goto(`${base}/?today=2026-09-26&demo=1`, { waitUntil: "networkidle" });
 await p.evaluate(() => {
   localStorage.clear();
   sessionStorage.clear();
@@ -130,6 +130,7 @@ const fonts = [
   ...[400, 500, 600, 700].flatMap((w) => [font("Plex", `plex-${w}.woff2`, w, HE), font("Plex", `plex-latin-${w}.woff2`, w, LATIN)]),
   font("Karantina", "karantina-700.woff2", 700, HE),
   font("Karantina", "karantina-latin-700.woff2", 700, LATIN),
+  font("Logo", "poppins-600.woff2", 600, LATIN),
 ].join("\n");
 const html = readFileSync(join(here, "guide.html"), "utf8").replace("/*FONTS*/", fonts);
 const tmp = join(here, ".guide.build.html");

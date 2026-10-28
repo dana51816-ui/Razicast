@@ -180,3 +180,16 @@ export function createSeed(): AppData {
     settings: { receiptsBlockClosing: false },
   };
 }
+
+/** A clean start: no demo records. Real clients are added by applyClientRates. */
+export function createEmpty(): AppData {
+  return {
+    version: 3,
+    instructors: [],
+    frameworks: [],
+    activities: [],
+    receipts: [],
+    months: [],
+    settings: { receiptsBlockClosing: false, demoRemoved: true },
+  };
+}

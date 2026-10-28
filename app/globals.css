@@ -7,6 +7,7 @@
 @theme {
   --font-sans: var(--font-plex), "IBM Plex Sans Hebrew", system-ui, sans-serif;
   --font-display: var(--font-karantina), "Karantina", var(--font-plex), sans-serif;
+  --font-logo: var(--font-poppins), "Poppins", system-ui, sans-serif;
 
   --color-stone: #efefec;
   --color-stone-2: #e2e2de;
@@ -19,6 +20,10 @@
   --color-ink-2: #54575e;
   --color-ink-3: #8e9097;
   --color-ink-soft: #26282c;
+
+  /* RaziCast logo: graphite letters, red dot on the i. The red is the logo's only. */
+  --color-brand-ink: #2a2a2c;
+  --color-brand-red: #e31b23;
 
   --color-cobalt: #2b35e8;
   --color-cobalt-soft: #d9dbff;
