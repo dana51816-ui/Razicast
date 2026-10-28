@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   activitiesIn,
   activityUnit,
+  fixedNote,
   hasPaymentTerms,
   monthOf,
   quoteActivity,
@@ -230,10 +231,13 @@ export function ActivityFlow({ preset, onClose }: { preset: Extract<Flow, { kind
             hint={
               unitModel
                 ? `לפי ${framework?.clientBillingModel === unitModel ? `התעריף של ${framework?.name}` : `התעריף של ${instructor.name}`}, ${RATE_MODELS[unitModel].label}`
-                : "אין יחידת חיוב מוגדרת, סופרים יחידות"
+                : "סכום קבוע לכל פעילות. כמה פעילויות היו?"
             }
           />
           <Stepper big label={unitPlural(unitModel)} value={quantity} onChange={setQuantity} min={1} />
+          {fixedNote(instructor, framework) && (
+            <p className="mt-4 rounded-2xl bg-paper px-4 py-3 text-[14px] text-ink-2">{fixedNote(instructor, framework)}</p>
+          )}
           {instructor.travelRate !== null && (
             <div className="mt-8 rounded-[22px] bg-paper px-5 py-4">
               <div className="flex items-baseline justify-between mb-2">

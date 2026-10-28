@@ -17,7 +17,7 @@ export const RATE_MODELS: Record<RateModel, { label: string; per: string; plural
   perGroup: { label: "לפי קבוצה", per: "לקבוצה", plural: "קבוצות", one: "קבוצה" },
   perHour: { label: "לפי שעה", per: "לשעה", plural: "שעות", one: "שעה" },
   perDay: { label: "לפי יום", per: "ליום", plural: "ימים", one: "יום" },
-  fixed: { label: "סכום קבוע", per: "לפעילות", plural: "יחידות", one: "פעילות", hint: "בלי קשר לכמות" },
+  fixed: { label: "סכום קבוע", per: "לפעילות", plural: "פעילויות", one: "פעילות", hint: "לכל פעילות, לא לפי שעות או קבוצות" },
   custom: { label: "אחר", per: "לפי הסכם", plural: "יחידות", one: "פעילות", hint: "מזינים סכום בכל פעילות" },
 };
 
@@ -73,7 +73,25 @@ export function activityUnit(instructor: Instructor | null, framework: Framework
 }
 
 export function unitPlural(model: RateModel | null) {
-  return model ? RATE_MODELS[model].plural : "יחידות";
+  return model ? RATE_MODELS[model].plural : "פעילויות";
+}
+
+/**
+ * A fixed amount is per activity. When nothing else counts units (no hours / groups / days),
+ * the quantity is the number of activities and multiplies it; otherwise the quantity counts
+ * the other side's unit and the fixed amount is charged once.
+ */
+function fixedTimes(unitModel: RateModel | null, q: number) {
+  return unitModel === null ? q : 1;
+}
+
+/** Which side is a fixed amount that the quantity does not change (shown on the quantity step). */
+export function fixedNote(instructor: Instructor | null, framework: Framework | null): string | null {
+  const unit = activityUnit(instructor, framework);
+  if (unit === null) return null;
+  if (framework?.clientBillingModel === "fixed") return `הסכום מ${framework.name} קבוע לפעילות, ולא משתנה לפי מספר ה${RATE_MODELS[unit].plural}`;
+  if (instructor?.paymentModel === "fixed") return `התשלום ל${instructor.name} קבוע לפעילות, ולא משתנה לפי מספר ה${RATE_MODELS[unit].plural}`;
+  return null;
 }
 
 /**
@@ -94,10 +112,11 @@ export function quoteActivity({ instructor, framework, quantity, travelUnits }: 
   } else if (framework.clientBillingModel === "custom") {
     revenueGap = `התשלום של ${framework.name} לפי הסכם`;
   } else if (framework.clientBillingModel === "fixed") {
+    const n = fixedTimes(unitModel, q);
     revenue = {
-      value: framework.clientRate!,
+      value: framework.clientRate! * n,
       mode: "calculated",
-      source: `${formatILS(framework.clientRate!)} סכום קבוע · תעריף ${framework.name}`,
+      source: `${formatILS(framework.clientRate!)}${n > 1 ? ` × ${n}` : ""} סכום קבוע · תעריף ${framework.name}`,
     };
   } else {
     revenue = {
@@ -120,10 +139,11 @@ export function quoteActivity({ instructor, framework, quantity, travelUnits }: 
 
   if (im && im !== "custom" && instructor.baseRate !== null) {
     if (im === "fixed") {
+      const n = fixedTimes(unitModel, q);
       payment = {
-        value: instructor.baseRate + travel,
+        value: instructor.baseRate * n + travel,
         mode: "calculated",
-        source: `${formatILS(instructor.baseRate)} סכום קבוע${travelText} · תעריף ${instructor.name}`,
+        source: `${formatILS(instructor.baseRate)}${n > 1 ? ` × ${n}` : ""} סכום קבוע${travelText} · תעריף ${instructor.name}`,
       };
     } else if (unitModel && unitModel !== im) {
       paymentGap = `התעריף של ${instructor.name} הוא ${RATE_MODELS[im].per}, והמסגרת מחויבת ${RATE_MODELS[unitModel].per}`;
@@ -137,11 +157,11 @@ export function quoteActivity({ instructor, framework, quantity, travelUnits }: 
   } else if (im === "custom") {
     paymentGap = `התשלום ל${instructor.name} לפי הסכם`;
   } else if (framework && framework.defaultInstructorRate !== null && framework.clientBillingModel && framework.clientBillingModel !== "custom") {
-    const base = framework.clientBillingModel === "fixed" ? framework.defaultInstructorRate : framework.defaultInstructorRate * q;
+    const n = framework.clientBillingModel === "fixed" ? fixedTimes(unitModel, q) : q;
     payment = {
-      value: base + travel,
+      value: framework.defaultInstructorRate * n + travel,
       mode: "calculated",
-      source: `${formatILS(framework.defaultInstructorRate)}${framework.clientBillingModel === "fixed" ? "" : ` × ${q}`}${travelText} · תעריף מדריך קבוע של ${framework.name}`,
+      source: `${formatILS(framework.defaultInstructorRate)}${n > 1 ? ` × ${n}` : ""}${travelText} · תעריף מדריך קבוע של ${framework.name}`,
     };
   } else {
     paymentGap = framework
